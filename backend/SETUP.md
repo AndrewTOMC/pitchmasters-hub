@@ -18,7 +18,7 @@ The July script project still exists with its old address; nothing uses it any m
 Open this in a browser:
 https://script.google.com/macros/s/AKfycbxSil_S689c6GYL5l6S63klkYuy5NwnFlc_ZXYmc9IOPuUMQ9twQrZreZrw4d6Y7bNW/exec
 
-You should see `"version":"2-royale"`. If you still see the old message, the new version did not publish; repeat step 4.
+You should see `"version":"2-royale"`. If you still see the old message, the new version did not publish; repeat step 3.
 
 ## What lives where
 
