@@ -31,7 +31,7 @@ var CFG = {
   EVENT_FOLDER_NAME: 'Royale Oct 2026',      // subfolder created under Pitcher Uploads
   MAKE_COVER_LINK_VIEWABLE: false,           // false = photos stay private to the Drive owner
   SHARE_FOLDER_WITH: ['lee-anne@getstoryd.com', 'annie@getstoryd.com'], // can open the event's photo folder
-  EXEC_URL: 'https://script.google.com/macros/s/AKfycbzG0bBQcG8uOw1QdrFOuSOmysY53N804XaIbGxyxTea_7EA80Qhue3Q59P_HFw3gdqt8w/exec',
+  EXEC_URL: 'https://script.google.com/macros/s/AKfycbxSil_S689c6GYL5l6S63klkYuy5NwnFlc_ZXYmc9IOPuUMQ9twQrZreZrw4d6Y7bNW/exec',
   TZ: 'Africa/Johannesburg'
 };
 
