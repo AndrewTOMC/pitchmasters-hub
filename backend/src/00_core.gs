@@ -390,7 +390,9 @@ function json_(obj) {
    KEEP-WARM · run installKeepWarm() once from the editor
    ============================================================ */
 function keepWarm() {
-  try { UrlFetchApp.fetch(CFG.EXEC_URL + '?ping=1', { muteHttpExceptions:true }); } catch (e) {}
+  var url = '';
+  try { url = ScriptApp.getService().getUrl(); } catch (e) {}
+  try { UrlFetchApp.fetch((url || CFG.EXEC_URL) + '?ping=1', { muteHttpExceptions:true }); } catch (e) {}
 }
 function installKeepWarm() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
