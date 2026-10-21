@@ -73,8 +73,8 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
 .corner.l{left:0}
 .corner.r{right:0;transform:scaleX(-1)}
 .art{position:absolute;pointer-events:none;z-index:0;filter:drop-shadow(0 18px 30px rgba(30,10,12,.35))}
-.gate-art-l{left:-2%;bottom:0;width:clamp(220px,25vw,380px)}
-.gate-art-r{right:-2%;bottom:0;width:clamp(220px,25vw,380px)}
+.gate-art-l{left:0;bottom:0;height:clamp(300px,64vh,660px);width:auto}
+.gate-art-r{right:1%;bottom:0;height:clamp(300px,64vh,660px);width:auto}
 .gate-in{position:relative;z-index:1;width:100%;max-width:540px;text-align:center;animation:pmCurtain .6s ease both}
 .title{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;line-height:.92;margin:0}
 .title .t1{display:block;font-size:clamp(40px,8.4vw,74px);letter-spacing:.02em}
@@ -144,7 +144,7 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
 
 /* welcome */
 .welcome-in{position:relative;z-index:1;max-width:620px}
-.welcome-art{right:-30px;bottom:-10px;width:clamp(220px,32vw,380px)}
+.welcome-art{right:-6px;top:44%;width:clamp(260px,36vw,470px)}
 #checklist{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;max-width:470px}
 .check{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 14px;border-radius:var(--pm-r-md);cursor:pointer;background:#fff;border:1.5px solid var(--pm-line)}
 .check:hover{border-color:var(--pm-ink-2)}
@@ -172,6 +172,10 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
 .wine-card .muted{color:rgba(247,239,227,.82);font-size:13.5px}
 .dress{margin-top:16px;padding:14px 16px;border-radius:var(--pm-r-md);background:rgba(247,239,227,.08);border:1px solid rgba(230,181,55,.35);position:relative}
 .dress b{color:var(--pm-gold)}
+.wine-card.has-art{padding-bottom:0}
+.wine-card.has-art .wine-text{position:relative;z-index:1}
+.wine-art{position:relative;display:block;width:min(240px,62%);margin:10px -12px 0 auto;filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))}
+.modal-art{position:absolute;right:58px;bottom:-34px;height:150px;pointer-events:none}
 
 /* three minutes */
 .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:24px 0 0}
@@ -267,7 +271,8 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
 .recap span{font-weight:700}
 .recap em{margin-left:auto;font-style:normal;font-size:13px;color:rgba(247,239,227,.85)}
 .done-mail{margin-top:16px;font-size:14px;color:rgba(247,239,227,.9)}
-.done-art{bottom:0;right:2%;width:clamp(200px,26vw,360px)}
+.done-art{bottom:0;right:1%;height:min(66vh,560px);width:auto}
+.done-in > .done-mail:last-child{max-width:44ch;margin-left:auto;margin-right:auto}
 
 /* 9 · RESPONSIVE ------------------------------------------- */
 @media (max-width:980px){
@@ -277,7 +282,7 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
 }
 @media (max-width:760px){
   .two-col{grid-template-columns:1fr}
-  .welcome-art,.done-art{display:none}
+  .welcome-art,.done-art,.modal-art{display:none}
   .facts{grid-template-columns:1fr}
   .gate-art-l,.gate-art-r{display:none}
   .prog{display:none}
@@ -559,12 +564,15 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
             <div class="field"><label class="label" for="fNotes">Anything else?</label><textarea class="textarea" id="fNotes" data-field="notes" rows="3" placeholder="A request, a question, a nervous thought. Tell us."></textarea></div>
           </div>
         </div>
-        <div class="wine-card">
+        <div class="wine-card has-art">
           <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
-          <h2>Almost there</h2>
-          <p>Fill these in, then continue to read everything through once before you lock it in.</p>
-          <p class="muted">You can come back and change anything until <strong class="ev-deadline"></strong>.</p>
-          <div class="dress"><b>Dress code.</b> <span class="ev-dress"></span></div>
+          <div class="wine-text">
+            <h2>Almost there</h2>
+            <p>Fill these in, then continue to read everything through once before you lock it in.</p>
+            <p class="muted">You can come back and change anything until <strong class="ev-deadline"></strong>.</p>
+            <div class="dress"><b>Dress code.</b> <span class="ev-dress"></span></div>
+          </div>
+          <img class="wine-art" src="assets/royale/tailor.webp" alt="" onerror="this.remove()">
         </div>
       </div>
     </div>
@@ -587,6 +595,7 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
     <div class="modal-head">
       <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
       <button class="modal-x" data-close="faq" aria-label="Close">✕</button>
+      <img class="modal-art" src="assets/royale/cherub-a.webp" alt="" onerror="this.remove()">
       <h2 id="faqTitle">Frequent fears and questions</h2>
       <p>Before you ask, the answer might be here.</p>
     </div>
@@ -602,6 +611,7 @@ button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit
   <div class="modal small on-paper" role="dialog" aria-modal="true" aria-labelledby="askTitle">
     <div class="modal-head">
       <button class="modal-x" data-close="ask" aria-label="Close">✕</button>
+      <img class="modal-art" src="assets/royale/cherub-b.webp" alt="" onerror="this.remove()">
       <h2 id="askTitle">Ask the team</h2>
       <p>Your message goes straight to Annie and Lee-Anne by email.</p>
     </div>
