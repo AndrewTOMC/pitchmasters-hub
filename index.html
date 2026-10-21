@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pitchmasters Royale Pitch Hub</title>
+<meta name="description" content="The stage door for Pitchmasters Royale pitchers and judges. Friday 30 October 2026, BMW Cape Town City.">
+<meta name="theme-color" content="#663C3D">
+<meta property="og:title" content="Pitchmasters Royale Pitch Hub">
+<meta property="og:description" content="Your licence to pitch starts here. Friday 30 October 2026, BMW Cape Town City.">
+<meta property="og:image" content="https://pitchershub.vercel.app/assets/email/royale-share.png">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23663C3D'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' text-anchor='middle' fill='%23E6B537'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/royale/tokens.css">
+<style>
+/* ============================================================
+   PITCHMASTERS ROYALE · PITCH HUB · v2
+   One file, no build step. Pitchers and judges share the hub;
+   the flow switches on the signed-in role.
+   Sections: 1 base · 2 stage door · 3 chrome · 4 sheets + steps
+             · 5 rail · 6 nav · 7 overlays · 8 done · 9 responsive
+   ============================================================ */
+
+/* 1 · BASE -------------------------------------------------- */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--pm-text);font-size:15px;line-height:1.55;color:var(--pm-ink);background:var(--pm-wine);-webkit-font-smoothing:antialiased}
+[hidden]{display:none !important}
+a{color:var(--pm-red);font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{color:var(--pm-wine)}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pm-gold);outline-offset:2px;border-radius:6px}
+.on-paper :focus-visible{outline-color:var(--pm-gold-ink)}
+.display{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.04em;line-height:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.spacer{flex:1}
+@keyframes pmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pmCurtain{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 28px;font-weight:700;font-size:15px;letter-spacing:.01em;cursor:pointer;text-decoration:none;transition:background .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn-red{background:var(--pm-red);color:var(--pm-cream)}
+.btn-red:hover{background:var(--pm-wine);color:var(--pm-cream)}
+.btn-gold{background:var(--pm-gold);color:var(--pm-ink)}
+.btn-gold:hover{background:var(--pm-gold-soft)}
+.btn-line{background:transparent;color:var(--pm-cream);box-shadow:inset 0 0 0 1.5px rgba(247,239,227,.55)}
+.btn-line:hover{box-shadow:inset 0 0 0 1.5px var(--pm-cream)}
+.btn[disabled],.btn[data-busy="1"]{opacity:.7;cursor:progress}
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:13.5px;font-weight:700;color:var(--pm-ink)}
+.label small{font-weight:500;color:var(--pm-ink-2);font-size:12.5px}
+.input,.textarea,.select{width:100%;border:1.5px solid var(--pm-line);border-radius:var(--pm-r-md);padding:12px 14px;font-size:15px;background:#fff;color:var(--pm-ink)}
+.textarea{line-height:1.6;resize:vertical}
+.input:focus,.textarea:focus{border-color:var(--pm-gold-ink);outline:none;box-shadow:0 0 0 3px rgba(230,181,55,.35)}
+::placeholder{color:#a8958c}
+.hint{font-size:13px;color:var(--pm-ink-2)}
+.wc{font-size:12.5px;font-weight:700;color:var(--pm-ink-2)}
+.wc.good{color:var(--pm-ok)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 16px;font-size:14px;font-weight:600;border-radius:999px;cursor:pointer;background:#fff;border:1.5px solid var(--pm-line);color:var(--pm-ink)}
+.chip:hover{border-color:var(--pm-ink-2)}
+.chip[aria-pressed="true"]{background:var(--pm-wine);border-color:var(--pm-wine);color:var(--pm-cream)}
+
+/* 2 · STAGE DOOR ------------------------------------------- */
+#gate{min-height:100vh;background:var(--pm-gradient);color:var(--pm-cream);position:relative;overflow:hidden;padding:clamp(56px,9vh,96px) 20px 56px;display:flex;flex-direction:column;align-items:center}
+.corner{position:absolute;top:0;width:clamp(120px,19vw,260px);pointer-events:none;z-index:0}
+.corner.l{left:0}
+.corner.r{right:0;transform:scaleX(-1)}
+.art{position:absolute;pointer-events:none;z-index:0;filter:drop-shadow(0 18px 30px rgba(30,10,12,.35))}
+.gate-art-l{left:-2%;bottom:0;width:clamp(220px,25vw,380px)}
+.gate-art-r{right:-2%;bottom:0;width:clamp(220px,25vw,380px)}
+.gate-in{position:relative;z-index:1;width:100%;max-width:540px;text-align:center;animation:pmCurtain .6s ease both}
+.title{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;line-height:.92;margin:0}
+.title .t1{display:block;font-size:clamp(40px,8.4vw,74px);letter-spacing:.02em}
+.title .t2{display:block;font-size:clamp(58px,13vw,118px);letter-spacing:.04em}
+.flourish{display:block;width:min(300px,70%);height:auto;margin:16px auto 0}
+.gate-line{font-family:var(--pm-display);text-transform:uppercase;letter-spacing:.08em;font-size:clamp(17px,2.6vw,21px);margin:16px 0 0;line-height:1.3}
+.gate-card{position:relative;background:var(--pm-paper);color:var(--pm-ink);border-radius:var(--pm-r-lg);padding:22px;margin:26px auto 0;text-align:left;box-shadow:var(--pm-shadow)}
+.gate-card::before,.sheet::before{content:"";position:absolute;inset:7px;border:1px solid rgba(201,150,42,.45);border-radius:9px;pointer-events:none}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;border:0;padding:0}
+.roles legend{font-size:13.5px;font-weight:700;margin-bottom:8px;padding:0}
+.role-opt{position:relative;display:block;cursor:pointer}
+.role-opt input{position:absolute;opacity:0;pointer-events:none}
+.role-card{display:block;border:1.5px solid var(--pm-line);background:#fff;border-radius:var(--pm-r-md);padding:13px 14px 12px;transition:border-color .15s,box-shadow .15s,background .15s;height:100%}
+.role-card b{display:block;padding-right:20px;font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:20px;line-height:1.05;color:var(--pm-wine)}
+.role-card span{display:block;font-size:12.5px;color:var(--pm-ink-2);margin-top:4px;line-height:1.4}
+.role-opt:hover .role-card{border-color:var(--pm-ink-2)}
+.role-opt input:checked + .role-card{border-color:var(--pm-wine);background:#fff9f0;box-shadow:inset 0 0 0 1px var(--pm-wine)}
+.role-opt input:checked + .role-card::after{content:"";position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:var(--pm-gold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%232E1A1B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.role-opt input:focus-visible + .role-card{outline:3px solid var(--pm-gold-ink);outline-offset:2px}
+.gate-fields{display:flex;flex-direction:column;gap:12px}
+#gateSubmit{width:100%;margin-top:16px;border-radius:var(--pm-r-md)}
+.gate-error{background:var(--pm-err-bg);border:1px solid var(--pm-err-line);color:var(--pm-err);border-radius:var(--pm-r-md);padding:11px 13px;margin-top:12px;font-size:13.5px;font-weight:600;line-height:1.45}
+.gate-error button{display:inline;background:none;border:0;padding:0;margin-top:6px;color:var(--pm-err);font-weight:800;text-decoration:underline;cursor:pointer}
+.gate-help{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:13px}
+.linkish{background:none;border:0;padding:0;color:var(--pm-red);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:13px}
+.gate-facts{margin-top:26px;font-family:var(--pm-display);text-transform:uppercase;letter-spacing:.08em;font-size:16px;line-height:1.55}
+.gate-facts a{color:var(--pm-cream);font-weight:400;text-decoration-color:rgba(247,239,227,.5)}
+
+/* 3 · APP CHROME ------------------------------------------- */
+#app{min-height:100vh;position:relative;isolation:isolate}
+#app::before{content:"";position:fixed;inset:0;background:var(--pm-gradient);z-index:-1}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(58,32,35,.94);backdrop-filter:blur(8px);border-bottom:1px solid rgba(230,181,55,.45);color:var(--pm-cream)}
+.topbar-in{max-width:1180px;margin:0 auto;padding:10px clamp(14px,3vw,24px);display:flex;align-items:center;gap:clamp(10px,2vw,18px);flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1}
+.brand .display{font-size:21px;letter-spacing:.06em}
+.brand small{font-size:11.5px;color:rgba(247,239,227,.75);margin-top:4px;font-weight:600}
+.who{display:flex;align-items:center;gap:8px;border:1px solid rgba(230,181,55,.5);border-radius:999px;padding:5px 6px 5px 14px}
+.who-name{font-size:13.5px;font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who-role{font-size:12px;font-weight:800;background:var(--pm-gold);color:var(--pm-ink);border-radius:999px;padding:3px 10px}
+.prog{min-width:120px}
+.prog-label{font-size:12px;font-weight:700}
+.prog-track{height:6px;background:rgba(247,239,227,.18);border-radius:6px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;background:var(--pm-gold);border-radius:6px;transition:width .4s ease}
+#savePill{font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;opacity:0;transition:opacity .25s;background:var(--pm-ok-bg);color:var(--pm-ok)}
+#savePill.on{opacity:1}
+#savePill.err{background:var(--pm-err-bg);color:var(--pm-err);opacity:1}
+.top-actions{display:flex;gap:6px;align-items:center}
+.top-btn{background:none;border:1px solid rgba(247,239,227,.4);color:var(--pm-cream);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}
+.top-btn:hover{border-color:var(--pm-cream)}
+.top-btn.gold{background:var(--pm-gold);border-color:var(--pm-gold);color:var(--pm-ink)}
+.top-btn.quiet{border-color:transparent;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.shell{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,34px) clamp(14px,3vw,24px) 56px}
+
+/* 4 · SHEETS + STEPS --------------------------------------- */
+.step{animation:pmIn .35s ease both}
+.sheet{position:relative;background:var(--pm-paper);border-radius:var(--pm-r-lg);padding:clamp(26px,4.5vw,46px) clamp(22px,4.5vw,48px);box-shadow:var(--pm-shadow);overflow:hidden}
+.sheet + .sheet{margin-top:18px}
+.sheet h1,.sheet h2{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.04em;color:var(--pm-wine);margin:0;line-height:.98}
+.sheet h1{font-size:clamp(38px,6vw,66px)}
+.sheet h2{font-size:clamp(24px,3vw,30px)}
+.lede{font-size:16px;color:var(--pm-ink);max-width:60ch;margin:14px 0 0}
+.lede.soft{color:var(--pm-ink-2);font-size:15px}
+.sheet .art{opacity:.95}
+.two-col{display:grid;grid-template-columns:1.45fr 1fr;gap:18px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:18px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* welcome */
+.welcome-in{position:relative;z-index:1;max-width:620px}
+.welcome-art{right:-30px;bottom:-10px;width:clamp(220px,32vw,380px)}
+#checklist{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;max-width:470px}
+.check{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 14px;border-radius:var(--pm-r-md);cursor:pointer;background:#fff;border:1.5px solid var(--pm-line)}
+.check:hover{border-color:var(--pm-ink-2)}
+.check.done{background:var(--pm-ok-bg);border-color:var(--pm-ok-line)}
+.check-dot{width:22px;height:22px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;border:2px solid #cdb9a8}
+.check.done .check-dot{background:var(--pm-ok);border-color:var(--pm-ok)}
+.check-label{font-size:15px;font-weight:700}
+.check-tag{font-size:12.5px;font-weight:700;color:var(--pm-ink-2)}
+.check.done .check-tag{color:var(--pm-ok)}
+
+/* the night */
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;margin-top:22px}
+.fact dt{font-size:12.5px;font-weight:700;color:var(--pm-ink-2)}
+.fact dd{margin:3px 0 0;font-family:var(--pm-display);text-transform:uppercase;letter-spacing:.05em;font-size:22px;line-height:1.15;color:var(--pm-ink)}
+.fact dd small{display:block;font-family:var(--pm-text);text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--pm-ink-2);margin-top:4px}
+.run{list-style:none;margin:16px 0 0;padding:0;counter-reset:run}
+.run li{display:flex;gap:14px;padding:12px 0;border-top:1px solid var(--pm-line);counter-increment:run}
+.run li::before{content:counter(run);font-family:var(--pm-display);font-size:22px;color:var(--pm-red);width:22px;flex:none;line-height:1.1}
+.run b{display:block;font-size:15px}
+.run span{font-size:13.5px;color:var(--pm-ink-2)}
+.wine-card{position:relative;background:var(--pm-night);color:var(--pm-cream);border-radius:var(--pm-r-lg);padding:28px;overflow:hidden;box-shadow:var(--pm-shadow)}
+.wine-card .corner{width:110px}
+.wine-card h2{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.05em;color:var(--pm-gold);font-size:30px;line-height:1;margin:34px 0 0;position:relative}
+.wine-card p{position:relative;margin:12px 0 0;font-size:14.5px}
+.wine-card .muted{color:rgba(247,239,227,.82);font-size:13.5px}
+.dress{margin-top:16px;padding:14px 16px;border-radius:var(--pm-r-md);background:rgba(247,239,227,.08);border:1px solid rgba(230,181,55,.35);position:relative}
+.dress b{color:var(--pm-gold)}
+
+/* three minutes */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:24px 0 0}
+.tip{background:#fff;border:1px solid var(--pm-line);border-radius:var(--pm-r-md);padding:20px}
+.tip h3{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:21px;margin:0;color:var(--pm-red)}
+.tip p{font-size:14px;margin:8px 0 0}
+.nudge{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#fff7e3;border:1.5px solid var(--pm-gold);border-radius:var(--pm-r-md);padding:14px 18px;margin-top:20px}
+.nudge p{flex:1;min-width:220px;font-size:14px;color:#5e440c;font-weight:600;margin:0}
+
+/* photo */
+.drop{display:block;margin-top:22px;border:2px dashed #d4c2b0;border-radius:var(--pm-r-lg);cursor:pointer;background:#fff;transition:border-color .15s}
+.drop:hover,.drop.dragover{border-color:var(--pm-red)}
+.drop.filled{border-style:solid;border-color:var(--pm-ok-line);padding:14px}
+.drop-empty{padding:52px 24px;text-align:center}
+.drop-empty b{display:block;font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:28px;color:var(--pm-wine)}
+.drop-empty span{display:block;font-size:14px;color:var(--pm-ink-2);margin-top:6px}
+#coverPreview{width:100%;height:340px;border-radius:var(--pm-r-md);background:#eee center/cover no-repeat}
+#coverCaption{font-size:13.5px;font-weight:700;color:var(--pm-ok);margin-top:10px}
+#coverCaption.busy{color:var(--pm-ink-2)}
+#coverCaption.err{color:var(--pm-err)}
+
+/* review */
+.rev{background:#fff;border:1px solid var(--pm-line);border-radius:var(--pm-r-md);padding:18px 20px}
+.rev + .rev{margin-top:12px}
+.rev-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.rev-head h3{font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:20px;margin:0;color:var(--pm-wine)}
+.rev-actions{display:flex;gap:12px}
+.rev-note{font-size:13px;font-style:italic;color:var(--pm-ink-2);margin:0 0 6px}
+.rev-row{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:8px 0;border-top:1px solid var(--pm-paper-2)}
+.rev-k{font-size:12.5px;font-weight:700;color:var(--pm-ink-2)}
+.rev-v{font-size:14.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.rev-v.empty{color:var(--pm-err);font-weight:600}
+.lock-error{margin-top:14px}
+
+/* 5 · RAIL (as the room will see you) ---------------------- */
+.col-wrap{display:flex;gap:22px;align-items:flex-start}
+.col-main{flex:1;min-width:0}
+#rail{width:330px;flex:none;position:sticky;top:96px}
+.bill{position:relative;background:var(--pm-night);color:var(--pm-cream);border-radius:var(--pm-r-lg);overflow:hidden;box-shadow:var(--pm-shadow)}
+.bill::after{content:"";position:absolute;inset:7px;border:1px solid rgba(230,181,55,.5);border-radius:9px;pointer-events:none}
+.bill-top{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 0;font-size:12px;font-weight:700;color:rgba(247,239,227,.82)}
+.bill-top b{background:var(--pm-gold);color:var(--pm-ink);border-radius:999px;padding:2px 9px;font-size:11.5px}
+.bill-photo{margin:12px 16px 0;height:220px;border-radius:8px;background:#4a2b2e center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(247,239,227,.7);font-weight:600}
+.bill-body{padding:16px 22px 24px}
+.bill-name{font-family:var(--pm-display);text-transform:uppercase;letter-spacing:.05em;font-size:26px;line-height:1;color:var(--pm-gold)}
+.bill-sub{font-size:14px;font-style:italic;margin-top:6px;color:var(--pm-cream)}
+.bill-rule{display:block;width:150px;margin:14px 0}
+.bill-text{font-size:13.5px;line-height:1.6;color:rgba(247,239,227,.9)}
+.bill-foot{font-size:12px;color:rgba(247,239,227,.65);margin-top:14px;font-weight:600}
+.rail-note{font-size:12.5px;color:rgba(247,239,227,.85);text-align:center;margin-top:10px}
+
+/* 6 · NAV --------------------------------------------------- */
+.nav{margin-top:26px;color:var(--pm-cream)}
+.nav-steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.nav-step{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:none;border:0;color:inherit;cursor:pointer}
+.nav-step:hover{background:rgba(247,239,227,.08)}
+.nav-num{width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:1.5px solid rgba(247,239,227,.55)}
+.nav-step.done .nav-num{background:rgba(247,239,227,.14);border-color:var(--pm-gold);color:var(--pm-gold)}
+.nav-step.active .nav-num{background:var(--pm-gold);border-color:var(--pm-gold);color:var(--pm-ink)}
+.nav-label{font-size:13.5px;font-weight:600;color:rgba(247,239,227,.82);white-space:nowrap}
+.nav-step.active .nav-label{color:var(--pm-cream);font-weight:800}
+.nav-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:18px}
+.nav-next{font-size:14px;color:rgba(247,239,227,.85)}
+.nav-next b{color:var(--pm-cream)}
+
+/* 7 · OVERLAYS --------------------------------------------- */
+.scrim{position:fixed;inset:0;background:rgba(42,22,24,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+.modal{background:var(--pm-paper);border-radius:var(--pm-r-lg);width:min(620px,100%);max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:pmCurtain .3s ease both}
+.modal.small{width:min(470px,100%)}
+.modal-head{position:relative;background:var(--pm-night);color:var(--pm-cream);padding:24px 26px;overflow:hidden}
+.modal-head .corner{width:96px}
+.modal-head h2{position:relative;font-family:var(--pm-display);font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:32px;line-height:1;margin:0;color:var(--pm-cream)}
+.modal-head p{position:relative;margin:6px 0 0;font-size:14px;color:rgba(247,239,227,.85)}
+.modal-x{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(247,239,227,.4);background:none;color:var(--pm-cream);font-size:18px;cursor:pointer;z-index:2}
+.modal-body{padding:18px 26px 24px}
+.faq-item{padding:14px 0;border-bottom:1px solid var(--pm-line)}
+.faq-item h3{font-size:15.5px;margin:0}
+.faq-item p{margin:4px 0 0;font-size:14px;color:var(--pm-ink-2)}
+.host{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.host-mark{width:44px;height:44px;border-radius:50%;background:var(--pm-wine);color:var(--pm-gold);font-family:var(--pm-display);font-size:22px;display:flex;align-items:center;justify-content:center;flex:none}
+.ok-note{background:var(--pm-ok-bg);border:1px solid var(--pm-ok-line);border-radius:var(--pm-r-md);padding:16px;color:var(--pm-ok);font-weight:700;text-align:center}
+
+/* 8 · DONE -------------------------------------------------- */
+#done{position:fixed;inset:0;z-index:70;overflow:auto;background:var(--pm-gradient);color:var(--pm-cream);display:flex;align-items:center;justify-content:center;padding:56px 20px}
+.done-in{position:relative;z-index:1;max-width:620px;text-align:center;animation:pmCurtain .6s ease both}
+.done-in .title .t1{font-size:clamp(30px,5.6vw,46px)}
+.done-in .title .t2{font-size:clamp(46px,10vw,92px)}
+.done-copy{font-size:16.5px;margin:18px auto 0;max-width:46ch}
+.recap{list-style:none;background:rgba(42,22,24,.35);border:1px solid rgba(230,181,55,.4);border-radius:var(--pm-r-lg);padding:14px 20px;margin:22px auto 0;max-width:420px;text-align:left}
+.recap li{display:flex;align-items:center;gap:12px;padding:7px 0}
+.recap i{width:22px;height:22px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800;border:1.5px solid rgba(247,239,227,.5)}
+.recap li.in i{background:var(--pm-gold);border-color:var(--pm-gold);color:var(--pm-ink)}
+.recap span{font-weight:700}
+.recap em{margin-left:auto;font-style:normal;font-size:13px;color:rgba(247,239,227,.85)}
+.done-mail{margin-top:16px;font-size:14px;color:rgba(247,239,227,.9)}
+.done-art{bottom:0;right:2%;width:clamp(200px,26vw,360px)}
+
+/* 9 · RESPONSIVE ------------------------------------------- */
+@media (max-width:980px){
+  .col-wrap{flex-direction:column}
+  #rail{position:static;width:100%;max-width:460px;margin:0 auto}
+  .gate-art-l,.gate-art-r{opacity:.35}
+}
+@media (max-width:760px){
+  .two-col{grid-template-columns:1fr}
+  .welcome-art,.done-art{display:none}
+  .facts{grid-template-columns:1fr}
+  .gate-art-l,.gate-art-r{display:none}
+  .prog{display:none}
+  .nav-label{display:none}
+  .rev-row{grid-template-columns:1fr;gap:2px}
+  .topbar{position:static}
+  .topbar-in{row-gap:8px}
+}
+@media (max-width:520px){
+  .who-name{max-width:110px}
+  .brand small{display:none}
+  .top-btn{padding:6px 10px}
+  #coverPreview{height:260px}
+  .roles{gap:8px}
+  .role-card{padding:11px 11px 10px}
+  .role-card b{font-size:18px}
+  .pair{grid-template-columns:1fr}
+  .brand{flex-basis:100%}
+  .nav-step{padding:4px 3px}
+  .nav-num{width:30px;height:30px}
+  .nav-next{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= STAGE DOOR ======================= -->
+<section id="gate" aria-labelledby="gateTitle">
+  <img class="corner l" src="assets/royale/lattice-corner.svg" alt="">
+  <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
+  <img class="art gate-art-l" src="assets/royale/card-player-left.webp" alt="" onerror="this.remove()">
+  <img class="art gate-art-r" src="assets/royale/card-player-right.webp" alt="" onerror="this.remove()">
+
+  <div class="gate-in">
+    <h1 class="title" id="gateTitle"><span class="t1">Pitchmasters</span><span class="t2">Royale</span></h1>
+    <img class="flourish" src="assets/royale/flourish.svg" alt="">
+    <p class="gate-line">The stage door for pitchers and judges</p>
+
+    <form class="gate-card on-paper" id="gateForm" autocomplete="on" novalidate>
+      <fieldset class="roles">
+        <legend>I'm coming as</legend>
+        <label class="role-opt">
+          <input type="radio" name="role" value="pitcher" checked>
+          <span class="role-card"><b>A pitcher</b><span>Three minutes on stage</span></span>
+        </label>
+        <label class="role-opt">
+          <input type="radio" name="role" value="judge">
+          <span class="role-card"><b>A judge</b><span>A seat on the panel</span></span>
+        </label>
+      </fieldset>
+      <div class="gate-fields">
+        <div class="field">
+          <label class="label" for="gateEmail">Email</label>
+          <input class="input" id="gateEmail" type="email" name="email" placeholder="The email your invite came to" autocomplete="username" inputmode="email">
+        </div>
+        <div class="field">
+          <label class="label" for="gatePassword">Password <small>from your invite email</small></label>
+          <input class="input" id="gatePassword" type="password" name="password" placeholder="For example martini-42" autocomplete="current-password">
+        </div>
+      </div>
+      <div id="gateError" class="gate-error" role="alert" hidden></div>
+      <button class="btn btn-red" id="gateSubmit" type="submit">Open my hub</button>
+      <div class="gate-help">
+        <button type="button" class="linkish" data-open="ask">Not on the list? Ask the team</button>
+        <button type="button" class="linkish" data-open="faq">Read the FAQ</button>
+      </div>
+    </form>
+
+    <div class="gate-facts">
+      <div id="gateWhen">Friday 30 October 2026, 6pm to 8:30pm</div>
+      <div><a id="gateWhere" href="#" target="_blank" rel="noopener">BMW Cape Town City, Foreshore</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== APP =========================== -->
+<section id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="brand"><span class="display">Pitchmasters Royale</span><small>Pitch hub</small></div>
+      <div class="spacer"></div>
+      <div class="who"><span class="who-name" id="whoName"></span><span class="who-role" id="whoRole"></span></div>
+      <div class="prog" aria-live="polite">
+        <div class="prog-label"><span id="doneCount">0</span> of <span id="doneTotal">6</span> done</div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+      <div id="savePill" role="status" aria-live="polite">Saved</div>
+      <div class="top-actions">
+        <button class="top-btn" data-open="faq">FAQ</button>
+        <button class="top-btn gold" data-open="ask">Ask the team</button>
+        <button class="top-btn quiet" id="signOut">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+
+    <!-- WELCOME -->
+    <div class="step" data-step="welcome" hidden>
+      <div class="sheet on-paper">
+        <img class="art welcome-art" src="assets/royale/ticket-hands.webp" alt="" onerror="this.remove()">
+        <div class="welcome-in">
+          <h1><span data-only="pitcher">Your licence to pitch, </span><span data-only="judge">Welcome to the panel, </span><span id="welcomeFirst"></span></h1>
+          <p class="lede" data-only="pitcher">You're on the bill for Pitchmasters Royale on <strong class="ev-date"></strong>. Three minutes, one spotlight and a room full of Voters in bow ties. This hub is where you hand us everything we need to put you on that stage looking unmissable.</p>
+          <p class="lede" data-only="judge">Thank you for judging Pitchmasters Royale on <strong class="ev-date"></strong>. This hub is where you give us your headshot and a short profile, so we can introduce you properly on the night.</p>
+          <p class="lede soft">Do these in order or jump around. Everything saves as you go, and it's all due by <strong class="ev-deadline"></strong>.</p>
+          <ul id="checklist"></ul>
+          <button class="btn btn-red" style="margin-top:26px" data-nav="next">Start with the night</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- THE NIGHT -->
+    <div class="step" data-step="night" hidden>
+      <div class="two-col">
+        <div class="sheet on-paper">
+          <h1>The night</h1>
+          <p class="lede">The name's Pitchmasters. Pitchmasters Royale. Our Casino Royale year-end gala, hosted by <span class="ev-host"></span>.</p>
+          <dl class="facts">
+            <div class="fact"><dt>Date</dt><dd class="ev-date"></dd></div>
+            <div class="fact"><dt>Time</dt><dd class="ev-time"></dd></div>
+            <div class="fact"><dt>Venue</dt><dd><span class="ev-venue"></span><small><a class="ev-map" href="#" target="_blank" rel="noopener"><span class="ev-venue-line"></span></a></small></dd></div>
+            <div class="fact"><dt>On the night</dt><dd>Live pitches<small>Casino-style fun, a drinks tasting, good food and networking</small></dd></div>
+          </dl>
+          <h2 style="margin-top:30px">How it runs</h2>
+          <ol class="run">
+            <li><div><b>Doors open</b><span>Arrive, find your people, try your luck at the tables</span></div></li>
+            <li><div><b>The pitches</b><span><span class="ev-mins"></span> minutes each, back to back</span></div></li>
+            <li><div><b>The verdict</b><span>The judges and the Voters have their say</span></div></li>
+            <li><div><b>A Pitchmaster is crowned</b><span>One story takes the title</span></div></li>
+          </ol>
+        </div>
+        <div class="wine-card">
+          <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
+          <div data-only="pitcher">
+            <h2>First in, best dressed</h2>
+            <p>Arrive at <strong class="ev-early"></strong> and we'll film extra reels of you for your own channels, and Andrew will run your pitch through with you before doors, so you walk on certain.</p>
+            <p class="muted">Choose your arrival time on the Logistics step.</p>
+          </div>
+          <div data-only="judge">
+            <h2>Settle in before doors</h2>
+            <p>Doors open at <strong class="ev-doors"></strong>. Give yourself time to park, grab a drink and meet the rest of the panel before the first pitcher walks on.</p>
+            <p class="muted">Choose your arrival time on the Logistics step.</p>
+          </div>
+          <div class="dress"><b>Dress code.</b> <span class="ev-dress"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THREE MINUTES (pitchers) -->
+    <div class="step" data-step="three" hidden>
+      <div class="sheet on-paper">
+        <h1>Make three minutes count</h1>
+        <p class="lede">Three minutes, then the bell. No slides, no lectern, just you and the room. Here's what wins it, and space to draft your own.</p>
+        <div class="tips">
+          <div class="tip"><h3>Storytelling</h3><p>Open on a moment, not a mission statement. One person, one turning point, one thing that changed. A room forgets your stats by the bar, but it remembers a story all the way home. Facts tell, stories sell.</p></div>
+          <div class="tip"><h3>Presenting</h3><p>Plant your feet and pick three faces in the crowd to talk to, like friends. Slow down. A held pause pulls a room in closer than any clever line. Let your hands stay still until they have something to say.</p></div>
+          <div class="tip"><h3>Business talk</h3><p>Say the problem so plainly a child would nod along. Then your fix, one proof that it already works, and a clear ask. Bring the one number that matters, not a spreadsheet. Clarity is the whole game.</p></div>
+        </div>
+      </div>
+      <div class="sheet on-paper">
+        <h2>Now draft yours</h2>
+        <p class="lede soft">Sentence starters to get you moving. Nothing here is saved or sent; it's yours to rehearse. You can copy it from the Review at the end.</p>
+        <div class="stack" style="margin-top:18px">
+          <div class="field"><label class="label" for="pOpen">Your opening</label><input class="input" id="pOpen" data-field="pOpen" placeholder="It started when..."></div>
+          <div class="field"><label class="label" for="pProblem">The problem</label><input class="input" id="pProblem" data-field="pProblem" placeholder="Every day, [who] struggles to..."></div>
+          <div class="field"><label class="label" for="pBuild">Your fix and the proof</label><input class="input" id="pBuild" data-field="pBuild" placeholder="So we built ..., and already ..."></div>
+          <div class="field"><label class="label" for="pAsk">Your ask</label><input class="input" id="pAsk" data-field="pAsk" placeholder="Tonight, I'm asking you to..."></div>
+        </div>
+        <div class="nudge">
+          <p>Now say it out loud and time yourself to 2:45. Not there yet? Change a line and go again until it sounds like you.</p>
+          <button type="button" class="linkish" id="clearPractice">Clear and start over</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHOTO / PROGRAMME / PROFILE / REVIEW share the rail -->
+    <div class="col-wrap" id="colWrap" hidden>
+      <div class="col-main">
+
+        <!-- PHOTO -->
+        <div class="step" data-step="photo" hidden>
+          <div class="sheet on-paper">
+            <h1 data-only="pitcher">Look the part</h1>
+            <h1 data-only="judge">Your headshot</h1>
+            <p class="lede" data-only="pitcher">It goes on the programme and up on the screens. You, looking like the founder you are: portrait, bright, shoulders up.</p>
+            <p class="lede" data-only="judge">We'll use it to introduce you on the screens and in our posts. A clear, bright, shoulders-up portrait works best.</p>
+            <label class="drop" id="coverDrop">
+              <input type="file" id="coverInput" accept="image/*" class="sr">
+              <span id="coverFilled" hidden><span id="coverPreview" style="display:block"></span><span id="coverCaption" style="display:block"></span></span>
+              <span class="drop-empty" id="coverEmpty" style="display:block"><b>Drop your photo here</b><span>or tap to choose one. JPG or PNG, portrait works best.</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SYNOPSIS (pitchers) -->
+        <div class="step" data-step="synopsis" hidden>
+          <div class="sheet on-paper">
+            <h1>Your story in fifty words</h1>
+            <p class="lede">This is your programme copy, what the Voters read before you speak. Give them the hook, not the CV.</p>
+            <div class="stack" style="margin-top:22px">
+              <div class="field"><label class="label" for="fBusiness">Business name</label><input class="input" id="fBusiness" data-field="business" placeholder="Your business"></div>
+              <div class="field"><label class="label" for="fTagline">Tagline</label><input class="input" id="fTagline" data-field="tagline" placeholder="One line that sums you up"></div>
+              <div class="field">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><label class="label" for="fSynopsis">Synopsis</label><span class="wc" id="wcSynopsis" aria-live="polite">0 of about 50 words</span></div>
+                <textarea class="textarea" id="fSynopsis" data-field="synopsis" rows="6" placeholder="Who you are, what you've built, and why the room should lean in"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE (judges) -->
+        <div class="step" data-step="profile" hidden>
+          <div class="sheet on-paper">
+            <h1>Your judge's profile</h1>
+            <p class="lede">How we'll introduce you to the room. Keep the bio short and human: what you do, and why founders should be glad you're on the panel.</p>
+            <div class="stack" style="margin-top:22px">
+              <div class="pair">
+                <div class="field"><label class="label" for="fTitle">Job title</label><input class="input" id="fTitle" data-field="title" placeholder="For example Founder and CEO"></div>
+                <div class="field"><label class="label" for="fCompany">Company</label><input class="input" id="fCompany" data-field="business" placeholder="Where you work"></div>
+              </div>
+              <div class="field">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><label class="label" for="fBio">Short bio</label><span class="wc" id="wcBio" aria-live="polite">0 of 50 to 80 words</span></div>
+                <textarea class="textarea" id="fBio" data-field="bio" rows="6" placeholder="Written in the third person, 50 to 80 words"></textarea>
+              </div>
+              <div class="field">
+                <span class="label" id="lensLabel">Your judging lens <small>if you know it</small></span>
+                <div class="chips" id="lensChips" role="group" aria-labelledby="lensLabel"></div>
+              </div>
+              <div class="field"><label class="label" for="fLinkedin">LinkedIn or website</label><input class="input" id="fLinkedin" data-field="linkedin" placeholder="linkedin.com/in/yourname"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REVIEW -->
+        <div class="step" data-step="review" hidden>
+          <div class="sheet on-paper">
+            <h1>One last look</h1>
+            <p class="lede">Everything you're handing us. Edit anything that's not quite right, then lock it in. You can still change things until <strong class="ev-deadline"></strong>.</p>
+            <div id="reviewList" style="margin-top:22px"></div>
+            <div id="lockError" class="gate-error lock-error" role="alert" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <aside id="rail" aria-label="Preview">
+        <div class="bill">
+          <div class="bill-top"><span id="billLabel">As the room will see you</span><b>Live preview</b></div>
+          <div class="bill-photo" id="billPhoto">Your photo</div>
+          <div class="bill-body">
+            <div class="bill-name" id="billName"></div>
+            <div class="bill-sub" id="billSub"></div>
+            <img class="bill-rule" src="assets/royale/flourish.svg" alt="">
+            <div class="bill-text" id="billText"></div>
+            <div class="bill-foot" id="billFoot"></div>
+          </div>
+        </div>
+        <p class="rail-note">This preview updates as you type.</p>
+      </aside>
+    </div>
+
+    <!-- LOGISTICS -->
+    <div class="step" data-step="logistics" hidden>
+      <div class="two-col">
+        <div class="sheet on-paper">
+          <h1>Before the bell</h1>
+          <div class="stack" style="margin-top:22px">
+            <div class="field">
+              <span class="label" id="arrivalLabel">When will you arrive?</span>
+              <div class="chips" id="arrivalChips" role="group" aria-labelledby="arrivalLabel"></div>
+              <p class="hint" id="arrivalPerk" data-only="pitcher" style="margin:4px 0 0"></p>
+            </div>
+            <div class="field" data-only="pitcher">
+              <span class="label" id="avLabel">On-stage needs</span>
+              <div class="chips" id="avChips" role="group" aria-labelledby="avLabel"></div>
+            </div>
+            <div class="field"><label class="label" for="fPhone">Mobile number</label><input class="input" id="fPhone" data-field="phone" style="max-width:300px" placeholder="+27 ..." inputmode="tel" autocomplete="tel"></div>
+            <div class="field"><label class="label" for="fDietary">Dietary or access needs</label><input class="input" id="fDietary" data-field="dietary" placeholder="Anything we should cater for?"></div>
+            <div class="field"><label class="label" for="fNotes">Anything else?</label><textarea class="textarea" id="fNotes" data-field="notes" rows="3" placeholder="A request, a question, a nervous thought. Tell us."></textarea></div>
+          </div>
+        </div>
+        <div class="wine-card">
+          <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
+          <h2>Almost there</h2>
+          <p>Fill these in, then continue to read everything through once before you lock it in.</p>
+          <p class="muted">You can come back and change anything until <strong class="ev-deadline"></strong>.</p>
+          <div class="dress"><b>Dress code.</b> <span class="ev-dress"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav" aria-label="Steps">
+      <ol class="nav-steps" id="navSteps"></ol>
+      <div class="nav-bar">
+        <button class="btn btn-line" data-nav="back">Back</button>
+        <div class="nav-next" id="navNext">Next: <b id="navNextLabel"></b></div>
+        <button class="btn btn-gold" data-nav="next" id="navNextBtn">Continue</button>
+      </div>
+    </nav>
+  </main>
+</section>
+
+<!-- =========================== FAQ =========================== -->
+<div class="scrim" id="faq" hidden data-close="faq">
+  <div class="modal on-paper" role="dialog" aria-modal="true" aria-labelledby="faqTitle">
+    <div class="modal-head">
+      <img class="corner r" src="assets/royale/lattice-corner.svg" alt="">
+      <button class="modal-x" data-close="faq" aria-label="Close">✕</button>
+      <h2 id="faqTitle">Frequent fears and questions</h2>
+      <p>Before you ask, the answer might be here.</p>
+    </div>
+    <div class="modal-body">
+      <div id="faqList"></div>
+      <p style="text-align:center;margin:18px 0 0;font-size:14px">Still stuck? <button class="linkish" data-open="ask">Ask the team</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- =========================== ASK =========================== -->
+<div class="scrim" id="ask" hidden data-close="ask">
+  <div class="modal small on-paper" role="dialog" aria-modal="true" aria-labelledby="askTitle">
+    <div class="modal-head">
+      <button class="modal-x" data-close="ask" aria-label="Close">✕</button>
+      <h2 id="askTitle">Ask the team</h2>
+      <p>Your message goes straight to Annie and Lee-Anne by email.</p>
+    </div>
+    <div class="modal-body">
+      <div class="host">
+        <div class="host-mark">A</div>
+        <div><div style="font-weight:800" id="hostName">Annie Olufuwa</div><div class="hint">Get Story'd, your host</div></div>
+      </div>
+      <p style="margin:0 0 14px;font-size:14px"><a id="hostMail" href="mailto:annie@getstoryd.com">annie@getstoryd.com</a><br><a id="hostTel" href="tel:+27763582634">+27 76 358 2634</a></p>
+      <form id="askForm" class="stack" style="gap:12px" novalidate>
+        <div class="field" id="askWhoFields">
+          <label class="label" for="askName">Your name</label>
+          <input class="input" id="askName" autocomplete="name">
+          <label class="label" for="askEmail" style="margin-top:8px">Your email</label>
+          <input class="input" id="askEmail" type="email" autocomplete="email" placeholder="So we can reply">
+        </div>
+        <div class="field"><label class="label" for="askMsg">Your message</label><textarea class="textarea" id="askMsg" rows="4" placeholder="Type your question and we'll reply by email"></textarea></div>
+        <div id="askError" class="gate-error" role="alert" hidden style="margin:0"></div>
+        <button class="btn btn-red" id="askSend" type="submit">Send message</button>
+      </form>
+      <div class="ok-note" id="askDone" hidden>Sent. Annie and Lee-Anne will reply by email.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================== DONE =========================== -->
+<div id="done" hidden role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+  <img class="corner l" src="assets/royale/lattice-corner.svg" alt="" style="position:fixed">
+  <img class="corner r" src="assets/royale/lattice-corner.svg" alt="" style="position:fixed">
+  <img class="art done-art" src="assets/royale/napoleon.webp" alt="" onerror="this.remove()" style="position:fixed">
+  <div class="done-in">
+    <h1 class="title" id="doneTitle"><span class="t1" id="doneT1">Break a leg,</span><span class="t2" id="doneFirst"></span></h1>
+    <img class="flourish" src="assets/royale/flourish.svg" alt="">
+    <p class="done-copy" id="doneCopy"></p>
+    <ul class="recap" id="doneRecap"></ul>
+    <p class="done-mail" id="doneMail" hidden>We've emailed you a confirmation.</p>
+    <button class="btn btn-gold" id="doneClose" style="margin-top:22px">Back to the hub</button>
+    <p class="done-mail">Everything is saved. Pop back any time to change things until <span class="ev-deadline"></span>.</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PITCH HUB · APPLICATION LOGIC
+   state -> derived flags -> paint. Plain DOM, no framework.
+   Demo without a backend: add ?demo=pitcher or ?demo=judge
+   ============================================================ */
+
+/* --- CONFIG: everything that changes per event lives here --- */
+var CONFIG = {
+  apiUrl: 'https://script.google.com/macros/s/AKfycbzG0bBQcG8uOw1QdrFOuSOmysY53N804XaIbGxyxTea_7EA80Qhue3Q59P_HFw3gdqt8w/exec',
+  event: {
+    dateLong:  'Friday 30 October 2026',
+    time:      '6pm to 8:30pm',
+    doors:     '6pm',
+    venue:     'BMW Cape Town City',
+    venueLine: 'Harbour Arch, Foreshore, Cape Town',
+    mapsUrl:   'https://www.google.com/maps/search/?api=1&query=BMW+Cape+Town+City+Harbour+Arch+Foreshore+Cape+Town',
+    host:      'BMW Cape Town City',
+    deadline:  'Wednesday 28 October',
+    pitchMinutes: 3,
+    earlyTime: '5:15',
+    dress:     'Dress to impress: bow ties, posh frocks, slick jackets and a touch of 007 glamour.'
+  },
+  host: { name:'Annie Olufuwa', email:'annie@getstoryd.com', phone:'+27 76 358 2634', tel:'+27763582634' },
+  saveDebounceMs: 900,
+  pulseMs: 1600
+};
+
+var DEMO = (function () { var m = /[?&]demo=(pitcher|judge)/.exec(location.search); return m ? m[1] : ''; })();
+
+/* --- FLOWS: the steps each role sees, in order --- */
+var FLOWS = {
+  pitcher: [
+    { id:'welcome',   label:'Welcome',       tag:'Start here' },
+    { id:'night',     label:'The night',     tag:'Read it' },
+    { id:'three',     label:'Three minutes', tag:'Practise' },
+    { id:'photo',     label:'Your photo',    tag:'Required' },
+    { id:'synopsis',  label:'Your synopsis', tag:'Required' },
+    { id:'logistics', label:'Logistics',     tag:'Required' },
+    { id:'review',    label:'Review',        tracked:false }
+  ],
+  judge: [
+    { id:'welcome',   label:'Welcome',       tag:'Start here' },
+    { id:'night',     label:'The night',     tag:'Read it' },
+    { id:'photo',     label:'Your headshot', tag:'Required' },
+    { id:'profile',   label:'Your profile',  tag:'Required' },
+    { id:'logistics', label:'Logistics',     tag:'Required' },
+    { id:'review',    label:'Review',        tracked:false }
+  ]
+};
+var RAIL_STEPS = { photo:1, synopsis:1, profile:1, review:1 };
+var SAVE_FIELDS = {
+  pitcher: ['business','tagline','synopsis','arrival','onStageNeeds','phone','dietary','notes'],
+  judge:   ['business','title','bio','lens','linkedin','arrival','phone','dietary','notes']
+};
+var ARRIVAL = {
+  pitcher: [CONFIG.event.earlyTime + ' (early)', '5:45', 'On the dot, 6:00'],
+  judge:   ['5:30', '5:45', 'On the dot, 6:00']
+};
+var AV_OPTIONS   = ['Just me and a mic', 'Music cue', 'Something else'];
+var LENS_OPTIONS = ['Public speaking', 'Storytelling', 'Business', 'Not sure yet'];
+
+var FAQS = {
+  pitcher: [
+    { q:'How long do I actually get?', a:'Three minutes, then the bell. Rehearse to 2:45 and you will never feel it coming.' },
+    { q:'Can I get a rehearsal in?', a:'Yes. Arrive at ' + CONFIG.event.earlyTime + ' and Andrew will run your pitch through with you before doors. It is the fastest way to walk on certain.' },
+    { q:'What do I get for arriving early?', a:'Extra reels filmed for your own channels, and that run-through with Andrew. Choose ' + CONFIG.event.earlyTime + ' on the Logistics step.' },
+    { q:'What should I wear?', a:CONFIG.event.dress },
+    { q:'What should my photo look like?', a:'You, looking like the founder you are. Portrait, bright, shoulders up. It goes on the programme and the screens.' },
+    { q:'When is everything due?', a:'By ' + CONFIG.event.deadline + ', two days before the night. You can keep editing until then.' },
+    { q:'What if I freeze?', a:"You won't. There's a friendly face at the side of the stage and a glass of something waiting after. Breathe. Begin." }
+  ],
+  judge: [
+    { q:'What do you need from me?', a:'A headshot, your job title and company, a 50 to 80 word bio, your LinkedIn or website, and your arrival time and mobile number.' },
+    { q:'How will the judging work?', a:'Annie is finalising the judging format and will share the details with the panel before the night.' },
+    { q:'What should I wear?', a:CONFIG.event.dress },
+    { q:'When is everything due?', a:'By ' + CONFIG.event.deadline + ', so we can introduce you properly on the screens and in our posts.' },
+    { q:'Where is it?', a:CONFIG.event.venue + ', ' + CONFIG.event.venueLine + '. Doors open at ' + CONFIG.event.doors + '.' }
+  ]
+};
+
+/* --- STATE --- */
+var state = {
+  role: 'pitcher', person: null, auth: null, idx: 0, visited: {},
+  form: { business:'', tagline:'', synopsis:'', title:'', bio:'', lens:'', linkedin:'',
+          arrival:'', onStageNeeds:'', phone:'', dietary:'', notes:'',
+          coverURL:'', coverName:'',
+          pOpen:'', pProblem:'', pBuild:'', pAsk:'' }   // p* = rehearsal only, never sent
+};
+
+var $  = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); };
+var words = function (s) { s = String(s || '').trim(); return s ? s.split(/\s+/).length : 0; };
+var flow = function () { return FLOWS[state.role]; };
+var cur  = function () { return flow()[state.idx]; };
+
+/* --- COMPLETION RULES --- */
+function isDone(id) {
+  var f = state.form;
+  switch (id) {
+    case 'welcome': case 'night': case 'three': return !!state.visited[id];
+    case 'photo':     return !!(f.coverURL || f.coverName);
+    case 'synopsis':  return !!f.synopsis.trim();
+    case 'profile':   return !!f.bio.trim();
+    case 'logistics': return !!(f.arrival && f.phone.trim());
+  }
+  return false;
+}
+function progress() {
+  var tracked = flow().filter(function (s) { return s.tracked !== false; });
+  var n = tracked.filter(function (s) { return isDone(s.id); }).length;
+  return { count:n, total:tracked.length, pct:Math.round(n / tracked.length * 100) };
+}
+
+/* ============================================================
+   EVENT FACTS into the page
+   ============================================================ */
+function fillEvent() {
+  var e = CONFIG.event;
+  var put = function (sel, txt) { $$(sel).forEach(function (el) { el.textContent = txt; }); };
+  put('.ev-date', e.dateLong); put('.ev-time', e.time); put('.ev-venue', e.venue);
+  put('.ev-venue-line', e.venueLine); put('.ev-deadline', e.deadline); put('.ev-early', e.earlyTime);
+  put('.ev-doors', e.doors); put('.ev-dress', e.dress.replace(/^Dress to impress:\s*/, 'Dress to impress. Think ')); put('.ev-mins', e.pitchMinutes);
+  put('.ev-host', e.host);
+  $$('.ev-map').forEach(function (a) { a.href = e.mapsUrl; });
+  $('#gateWhen').textContent = e.dateLong + ', ' + e.time;
+  $('#gateWhere').textContent = e.venue + ', ' + e.venueLine.split(',')[1].trim();
+  $('#gateWhere').href = e.mapsUrl;
+  $('#hostName').textContent = CONFIG.host.name;
+  $('#hostMail').textContent = CONFIG.host.email; $('#hostMail').href = 'mailto:' + CONFIG.host.email;
+  $('#hostTel').textContent = CONFIG.host.phone;  $('#hostTel').href = 'tel:' + CONFIG.host.tel;
+}
+
+/* ============================================================
+   STAGE DOOR
+   ============================================================ */
+var gateBusy = false;
+function gateRole() { var r = $('input[name="role"]:checked'); return r ? r.value : 'pitcher'; }
+function setGateRole(role) { var r = $('input[name="role"][value="' + role + '"]'); if (r) r.checked = true; }
+function gateFail(html) { var el = $('#gateError'); el.innerHTML = html; el.hidden = false; }
+
+$('#gateForm').addEventListener('submit', function (e) { e.preventDefault(); tryGate(); });
+['#gateEmail','#gatePassword'].forEach(function (s) { $(s).addEventListener('input', function () { $('#gateError').hidden = true; }); });
+$$('input[name="role"]').forEach(function (r) { r.addEventListener('change', function () { $('#gateError').hidden = true; }); });
+
+function tryGate() {
+  if (gateBusy) return;
+  $('#gateError').hidden = true;
+  var email = ($('#gateEmail').value || '').trim().toLowerCase();
+  var pass  = ($('#gatePassword').value || '').trim();
+  var role  = gateRole();
+  if (!email) return gateFail('Enter the email address your invite was sent to.');
+  if (!pass)  return gateFail('Enter the password from your invite email. It looks like <b>martini-42</b>.');
+
+  gateBusy = true;
+  var btn = $('#gateSubmit'); btn.dataset.busy = '1'; btn.textContent = 'Checking the guest list…';
+  API.signIn(email, pass, role).then(function (res) {
+    gateBusy = false; btn.dataset.busy = ''; btn.textContent = 'Open my hub';
+    if (res && res.ok) { state.auth = { email:email, password:pass, role:role }; remember(); return enter(res.person); }
+    var err = res && res.error;
+    if (err === 'wrong_role') {
+      var other = res.role === 'judge' ? 'a judge' : 'a pitcher';
+      gateFail('That email is on the list as ' + other + '.<br><button type="button" id="switchRole">Switch to ' + other + ' and open the door</button>');
+      $('#switchRole').addEventListener('click', function () { setGateRole(res.role); tryGate(); });
+      return;
+    }
+    gateFail(
+      err === 'bad_password' ? "That password doesn't match the one in your invite email. Check it, or ask the team to resend it." :
+      err === 'not_found'    ? "We can't find that email on the list. Use the address your invite came to, or ask the team to add you." :
+      err === 'withdrawn'    ? 'This invite is no longer active. If that is a mistake, ask the team.' :
+                               "We couldn't reach the hub just now. Wait a moment and try again."
+    );
+  });
+}
+
+function remember() { try { sessionStorage.setItem('pmRoyaleAuth', JSON.stringify(state.auth)); } catch (e) {} }
+function forget()   { try { sessionStorage.removeItem('pmRoyaleAuth'); } catch (e) {} }
+
+function enter(p) {
+  state.person = p || {};
+  state.role = p.role === 'judge' ? 'judge' : 'pitcher';
+  var f = state.form;
+  ['business','tagline','synopsis','title','bio','lens','linkedin','arrival','onStageNeeds','phone','dietary','notes']
+    .forEach(function (k) { f[k] = p[k] || ''; });
+  if (p.coverThumb) { f.coverURL = p.coverThumb; f.coverName = 'Photo on file'; }
+  else if (p.coverUrl) { f.coverName = 'Photo on file'; }
+
+  state.idx = 0; state.visited = { welcome:true };
+  $$('[data-only]').forEach(function (el) { el.hidden = el.dataset.only !== state.role; });
+  $('#gate').hidden = true; $('#app').hidden = false;
+
+  var first = p.first || (p.name || '').split(' ')[0] || (state.role === 'judge' ? 'Judge' : 'Pitcher');
+  $('#whoName').textContent = p.name || first;
+  $('#whoRole').textContent = state.role === 'judge' ? 'Judge' : 'Pitcher';
+  $('#welcomeFirst').textContent = first + '.';
+  $('#doneFirst').textContent = first + '.';
+  $('#doneT1').textContent = state.role === 'judge' ? 'See you on the panel,' : 'Break a leg,';
+  $('#billLabel').textContent = state.role === 'judge' ? 'How we will introduce you' : 'As the room will see you';
+  $('#askWhoFields').hidden = true;
+
+  $$('[data-field]').forEach(function (el) { el.value = f[el.dataset.field] || ''; });
+  buildChips('#arrivalChips', 'arrival', ARRIVAL[state.role]);
+  buildChips('#avChips', 'onStageNeeds', AV_OPTIONS);
+  buildChips('#lensChips', 'lens', LENS_OPTIONS);
+  $('#faqList').innerHTML = FAQS[state.role].map(function (x) {
+    return '<div class="faq-item"><h3>' + esc(x.q) + '</h3><p>' + esc(x.a) + '</p></div>';
+  }).join('');
+  paint();
+  window.scrollTo(0, 0);
+}
+
+$('#signOut').addEventListener('click', function () { forget(); location.href = location.pathname + (DEMO ? '?demo=' + DEMO : ''); });
+
+/* ============================================================
+   FIELDS · saving
+   ============================================================ */
+var REHEARSAL_ONLY = { pOpen:1, pProblem:1, pBuild:1, pAsk:1 };
+function setField(key, value) {
+  state.form[key] = value;
+  if (!REHEARSAL_ONLY[key]) API.saveDraft();
+  paintLive();
+}
+$$('[data-field]').forEach(function (el) {
+  el.addEventListener('input', function () { setField(el.dataset.field, el.value); });
+});
+
+var pillTimer;
+function pill(kind, text) {
+  var p = $('#savePill');
+  clearTimeout(pillTimer);
+  p.textContent = text; p.classList.toggle('err', kind === 'err'); p.classList.add('on');
+  if (kind !== 'err') pillTimer = setTimeout(function () { p.classList.remove('on'); }, CONFIG.pulseMs);
+}
+
+/* photo: instant local preview, resized upload to the team's Drive */
+var coverInput = $('#coverInput');
+coverInput.addEventListener('change', function () {
+  var file = coverInput.files && coverInput.files[0];
+  if (!file) return;
+  if (file.type.indexOf('image/') !== 0) { caption('err', 'That file is not an image. Choose a JPG or PNG.'); return; }
+  var reader = new FileReader();
+  reader.onload = function () {
+    state.form.coverURL = reader.result; state.form.coverName = file.name;
+    paintLive();
+    caption('busy', 'Uploading ' + file.name + '…');
+    API.uploadPhoto(file).then(function (res) {
+      if (res && res.ok) { caption('ok', '✓ ' + file.name + ' is saved. Tap to replace it.'); pill('ok', 'Saved'); }
+      else caption('err', "We couldn't save that photo. Check your connection and choose it again.");
+    });
+  };
+  reader.readAsDataURL(file);
+});
+function caption(kind, text) { var c = $('#coverCaption'); c.className = kind === 'ok' ? '' : kind; c.textContent = text; }
+var drop = $('#coverDrop');
+['dragenter','dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); }); });
+['dragleave','drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dragover'); }); });
+drop.addEventListener('drop', function (e) {
+  var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file) return;
+  coverInput.files = e.dataTransfer.files;
+  coverInput.dispatchEvent(new Event('change'));
+});
+
+$('#clearPractice').addEventListener('click', function () {
+  ['pOpen','pProblem','pBuild','pAsk'].forEach(function (k) { state.form[k] = ''; var el = $('[data-field="' + k + '"]'); if (el) el.value = ''; });
+  paintLive();
+});
+
+function buildChips(sel, field, options) {
+  var mount = $(sel); if (!mount) return;
+  mount.innerHTML = '';
+  options.forEach(function (opt) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = opt;
+    b.setAttribute('aria-pressed', state.form[field] === opt ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      $$('.chip', mount).forEach(function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+      setField(field, opt);
+    });
+    mount.appendChild(b);
+  });
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function go(i) {
+  state.idx = Math.max(0, Math.min(flow().length - 1, i));
+  state.visited[cur().id] = true;
+  paint();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+function goId(id) { flow().forEach(function (s, i) { if (s.id === id) go(i); }); }
+
+$$('[data-nav]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (btn.dataset.nav === 'back') { if (state.idx > 0) go(state.idx - 1); return; }
+    if (state.idx < flow().length - 1) { go(state.idx + 1); return; }
+    lockItIn();
+  });
+});
+
+function lockItIn() {
+  var btn = $('#navNextBtn');
+  if (btn.dataset.busy === '1') return;
+  $('#lockError').hidden = true;
+  btn.dataset.busy = '1'; btn.textContent = 'Locking it in…';
+  API.submit().then(function (res) {
+    btn.dataset.busy = ''; btn.textContent = 'Lock it in';
+    if (!res || !res.ok) {
+      var el = $('#lockError');
+      el.textContent = "We couldn't lock it in just now. Your answers are still here. Check your connection and press Lock it in again.";
+      el.hidden = false; return;
+    }
+    showDone(!!res.emailed);
+  });
+}
+
+function showDone(emailed) {
+  var judge = state.role === 'judge';
+  $('#doneCopy').textContent = judge
+    ? "We've got everything we need to introduce you. All that's left is " + CONFIG.event.venue + ', a room in black tie, and a front-row seat on ' + CONFIG.event.dateLong.replace(' 2026', '') + '.'
+    : "We've got your story. All that's left is " + CONFIG.event.venue + ', a full room and your ' + CONFIG.event.pitchMinutes + ' minutes on ' + CONFIG.event.dateLong.replace(' 2026', '') + '.';
+  var rows = judge
+    ? [['Your headshot','photo'], ['Your profile','profile'], ['Logistics','logistics']]
+    : [['Your photo','photo'], ['Your synopsis','synopsis'], ['Logistics','logistics']];
+  $('#doneRecap').innerHTML = rows.map(function (r) {
+    var d = isDone(r[1]);
+    return '<li class="' + (d ? 'in' : '') + '"><i>' + (d ? '✓' : '') + '</i><span>' + r[0] + '</span><em>' + (d ? 'In' : 'Still to add') + '</em></li>';
+  }).join('');
+  $('#doneMail').hidden = !emailed;
+  $('#done').hidden = false;
+  $('#doneClose').focus();
+}
+$('#doneClose').addEventListener('click', function () { $('#done').hidden = true; });
+
+/* ============================================================
+   OVERLAYS
+   ============================================================ */
+var lastFocus;
+$$('[data-open]').forEach(function (el) {
+  el.addEventListener('click', function () {
+    var id = el.dataset.open;
+    lastFocus = document.activeElement;
+    if (id === 'ask') {
+      $('#faq').hidden = true;
+      $('#askForm').hidden = false; $('#askDone').hidden = true; $('#askError').hidden = true;
+      $('#askWhoFields').hidden = !!state.auth;
+    }
+    $('#' + id).hidden = false;
+    var x = $('#' + id + ' .modal-x'); if (x) x.focus();
+  });
+});
+function closeAll() { $('#faq').hidden = true; $('#ask').hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+$$('[data-close]').forEach(function (el) {
+  el.addEventListener('click', function (e) { if (e.target === el || el.classList.contains('modal-x')) closeAll(); });
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAll(); $('#done').hidden = true; } });
+
+$('#askForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var msg = $('#askMsg').value.trim();
+  var email = state.auth ? state.auth.email : $('#askEmail').value.trim();
+  var name = state.auth ? '' : $('#askName').value.trim();
+  var err = $('#askError'); err.hidden = true;
+  if (!msg) { err.textContent = 'Type your question first.'; err.hidden = false; return; }
+  if (!state.auth && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Add your email so we can reply.'; err.hidden = false; return; }
+  var btn = $('#askSend'); btn.dataset.busy = '1'; btn.textContent = 'Sending…';
+  API.askTeam(msg, email, name).then(function (res) {
+    btn.dataset.busy = ''; btn.textContent = 'Send message';
+    if (!res || !res.ok) { err.textContent = "We couldn't send that just now. Try again, or email " + CONFIG.host.email + '.'; err.hidden = false; return; }
+    $('#askForm').hidden = true; $('#askDone').hidden = false; $('#askMsg').value = '';
+  });
+});
+
+/* ============================================================
+   REVIEW
+   ============================================================ */
+function reviewModel() {
+  var f = state.form, judge = state.role === 'judge';
+  var model = [
+    { title: judge ? 'Your headshot' : 'Your photo', step:'photo', rows:[{ k:'Photo', v: f.coverName ? '✓ ' + f.coverName : '' }] },
+    judge
+      ? { title:'Your profile', step:'profile', rows:[{ k:'Job title', v:f.title }, { k:'Company', v:f.business }, { k:'Bio', v:f.bio }, { k:'Judging lens', v:f.lens }, { k:'LinkedIn', v:f.linkedin }] }
+      : { title:'Your programme', step:'synopsis', rows:[{ k:'Business', v:f.business }, { k:'Tagline', v:f.tagline }, { k:'Synopsis', v:f.synopsis }] },
+    { title:'Logistics', step:'logistics', rows:[{ k:'Arrival', v:f.arrival }].concat(judge ? [] : [{ k:'On-stage needs', v:f.onStageNeeds }])
+        .concat([{ k:'Mobile', v:f.phone }, { k:'Dietary or access', v:f.dietary }, { k:'Notes', v:f.notes }]) }
+  ];
+  if (!judge) model.push({ title:'Your pitch notes', step:'three', copy:true, note:'Just for you. This rehearsal draft is not saved or sent. Copy it and take it with you.',
+    rows:[{ k:'Opening', v:f.pOpen }, { k:'The problem', v:f.pProblem }, { k:'Fix and proof', v:f.pBuild }, { k:'Your ask', v:f.pAsk }] });
+  return model;
+}
+var REQUIRED_ROWS = { 'Photo':1, 'Synopsis':1, 'Bio':1, 'Arrival':1, 'Mobile':1 };
+function paintReview() {
+  var mount = $('#reviewList');
+  mount.innerHTML = reviewModel().map(function (sec) {
+    return '<div class="rev"><div class="rev-head"><h3>' + sec.title + '</h3><div class="rev-actions">' +
+      (sec.copy ? '<button type="button" class="linkish" data-copy="1">Copy</button>' : '') +
+      '<button type="button" class="linkish" data-edit="' + sec.step + '">Edit</button></div></div>' +
+      (sec.note ? '<p class="rev-note">' + sec.note + '</p>' : '') +
+      sec.rows.map(function (r) {
+        var empty = !String(r.v || '').trim();
+        var needed = empty && REQUIRED_ROWS[r.k] && !sec.copy;
+        return '<div class="rev-row"><div class="rev-k">' + r.k + '</div><div class="rev-v' + (needed ? ' empty' : '') + '">' +
+               (empty ? (needed ? 'Still needed' : '<span style="color:#8C7A73">Not added</span>') : esc(r.v)) + '</div></div>';
+      }).join('') + '</div>';
+  }).join('');
+  $$('[data-edit]', mount).forEach(function (el) { el.addEventListener('click', function () { goId(el.dataset.edit); }); });
+  $$('[data-copy]', mount).forEach(function (el) { el.addEventListener('click', function () { copyPractice(el); }); });
+}
+function copyPractice(btn) {
+  var f = state.form, txt = [f.pOpen, f.pProblem, f.pBuild, f.pAsk].filter(Boolean).join('\n\n');
+  var done = function () { btn.textContent = 'Copied ✓'; setTimeout(function () { btn.textContent = 'Copy'; }, CONFIG.pulseMs); };
+  var fallback = function () { var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+}
+
+/* ============================================================
+   PAINT · paint() = step + everything, paintLive() = field-driven bits
+   ============================================================ */
+function paint() {
+  var s = cur(), last = state.idx === flow().length - 1;
+  $$('.step').forEach(function (el) { el.hidden = el.dataset.step !== s.id; });
+  $('#colWrap').hidden = !RAIL_STEPS[s.id];
+  $('[data-nav="back"]').style.visibility = state.idx > 0 ? 'visible' : 'hidden';
+  $('#navNextBtn').textContent = last ? 'Lock it in' : 'Continue';
+  $('#navNext').hidden = last;
+  $('#navNextLabel').textContent = last ? '' : flow()[state.idx + 1].label;
+  if (s.id === 'review') paintReview();
+  paintLive();
+}
+
+function paintLive() {
+  var f = state.form, p = progress(), judge = state.role === 'judge';
+
+  $('#doneCount').textContent = p.count; $('#doneTotal').textContent = p.total;
+  $('#progFill').style.width = p.pct + '%';
+
+  $('#navSteps').innerHTML = flow().map(function (s, i) {
+    var active = i === state.idx, done = (s.tracked === false ? !!state.visited[s.id] : isDone(s.id)) && !active;
+    return '<li><button type="button" class="nav-step' + (active ? ' active' : '') + (done ? ' done' : '') + '" data-go="' + i + '"' +
+           (active ? ' aria-current="step"' : '') + '><span class="nav-num">' + (done ? '✓' : i + 1) + '</span><span class="nav-label">' + s.label + '</span></button></li>';
+  }).join('');
+  $$('#navSteps [data-go]').forEach(function (el) { el.addEventListener('click', function () { go(+el.dataset.go); }); });
+
+  $('#checklist').innerHTML = flow().filter(function (s) { return s.tracked !== false; }).map(function (s) {
+    var d = isDone(s.id);
+    return '<li><button type="button" class="check' + (d ? ' done' : '') + '" data-goid="' + s.id + '"><span class="check-dot">' + (d ? '✓' : '') +
+           '</span><span class="check-label">' + s.label + '</span><span class="spacer"></span><span class="check-tag">' + (d ? 'Done' : s.tag) + '</span></button></li>';
+  }).join('');
+  $$('#checklist [data-goid]').forEach(function (el) { el.addEventListener('click', function () { goId(el.dataset.goid); }); });
+
+  /* photo */
+  var has = !!f.coverURL;
+  $('#coverDrop').classList.toggle('filled', has || !!f.coverName);
+  $('#coverFilled').hidden = !(has || f.coverName);
+  $('#coverEmpty').hidden = !!(has || f.coverName);
+  $('#coverPreview').style.backgroundImage = has ? 'url("' + f.coverURL + '")' : 'none';
+  $('#coverPreview').style.height = has ? '' : '0';
+  if (!$('#coverCaption').textContent && f.coverName) caption('ok', '✓ ' + f.coverName + '. Tap to replace it.');
+
+  /* rail */
+  var bp = $('#billPhoto');
+  bp.style.backgroundImage = has ? 'url("' + f.coverURL + '")' : 'none';
+  bp.textContent = has ? '' : (f.coverName ? 'Photo on file' : 'Your photo');
+  var name = (state.person && state.person.name) || '';
+  if (judge) {
+    $('#billName').textContent = name || 'Your name';
+    $('#billSub').textContent = [f.title, f.business].filter(Boolean).join(', ') || 'Your title and company';
+    $('#billText').textContent = f.bio || 'Your bio appears here as you write it. This is how Andrew will introduce you to the room.';
+    $('#billFoot').textContent = f.lens && f.lens !== 'Not sure yet' ? 'Judging lens: ' + f.lens : 'Judge, Pitchmasters Royale';
+  } else {
+    $('#billName').textContent = f.business || 'Your business';
+    $('#billSub').textContent = f.tagline || 'Your one-line tagline';
+    $('#billText').textContent = f.synopsis || 'Your fifty-word story shows up here as you write it. This is exactly what the Voters read before you take the stage.';
+    $('#billFoot').textContent = (name || 'Pitcher') + ', Pitchmasters Royale';
+  }
+
+  /* word counts */
+  var ws = words(f.synopsis), wb = words(f.bio);
+  var a = $('#wcSynopsis'); a.textContent = ws + ' of about 50 words'; a.classList.toggle('good', ws >= 35 && ws <= 60);
+  var b = $('#wcBio');      b.textContent = wb + ' of 50 to 80 words';  b.classList.toggle('good', wb >= 50 && wb <= 80);
+
+  /* arrival perk (pitchers) */
+  var early = f.arrival === ARRIVAL.pitcher[0];
+  $('#arrivalPerk').textContent = early
+    ? 'Brilliant. Early arrivals get extra reels filmed for their own channels, plus a run-through with Andrew before doors.'
+    : 'Tip: choose ' + CONFIG.event.earlyTime + " and we'll film extra reels of you, and Andrew will run your pitch through with you before doors.";
+}
+
+/* ============================================================
+   BACKEND SEAM · Apps Script Web App (see backend/Code.gs)
+   Plain-text JSON body = CORS "simple" request. Do not add headers.
+   ============================================================ */
+function apiPost(payload) {
+  if (DEMO) return demoApi(payload);
+  return fetch(CONFIG.apiUrl, { method:'POST', body:JSON.stringify(payload) })
+    .then(function (r) { return r.json(); })
+    .catch(function () { return { ok:false, error:'network' }; });
+}
+function fieldsPayload(extra) {
+  var a = state.auth, f = state.form, out = { email:a.email, password:a.password };
+  SAVE_FIELDS[state.role].forEach(function (k) { out[k] = f[k]; });
+  for (var k in extra) out[k] = extra[k];
+  return out;
+}
+function resizedDataURL(dataURL, maxDim, cb) {
+  var img = new Image();
+  img.onload = function () {
+    var s = Math.min(1, maxDim / Math.max(img.width, img.height));
+    var c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    try { cb(c.toDataURL('image/jpeg', 0.86)); } catch (e) { cb(dataURL); }
+  };
+  img.onerror = function () { cb(dataURL); };
+  img.src = dataURL;
+}
+var saveTimer;
+var API = {
+  signIn: function (email, password, role) { return apiPost({ action:'signin', email:email, password:password, role:role }); },
+  saveDraft: function () {
+    if (!state.auth) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      pill('ok', 'Saving…');
+      apiPost(fieldsPayload({ action:'save' })).then(function (res) {
+        if (res && res.ok) pill('ok', 'Saved');
+        else pill('err', "Not saved yet. Check your connection");
+      });
+    }, CONFIG.saveDebounceMs);
+  },
+  uploadPhoto: function (file) {
+    var a = state.auth, src = state.form.coverURL;
+    return new Promise(function (resolve) {
+      if (!a || !src) return resolve({ ok:false });
+      resizedDataURL(src, 1600, function (data) {
+        apiPost({ action:'uploadCover', email:a.email, password:a.password,
+          filename:(file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg', mimeType:'image/jpeg', dataBase64:data }).then(resolve);
+      });
+    });
+  },
+  askTeam: function (message, email, name) {
+    var a = state.auth;
+    return apiPost(a ? { action:'ask', email:a.email, password:a.password, message:message } : { action:'ask', email:email, name:name, message:message });
+  },
+  submit: function () { clearTimeout(saveTimer); return apiPost(fieldsPayload({ action:'submit' })); }
+};
+
+/* --- demo backend (only with ?demo=pitcher|judge) --- */
+function demoApi(p) {
+  var ok = function (x) { return new Promise(function (r) { setTimeout(function () { r(x); }, 350); }); };
+  if (p.action === 'signin') return ok({ ok:true, person: DEMO === 'judge'
+    ? { role:'judge', first:'Naledi', name:'Naledi Khumalo', business:'Harbour Ventures', title:'Managing Partner' }
+    : { role:'pitcher', first:'Thandi', name:'Thandi Molefe', business:'Ubuntu Threads' } });
+  if (p.action === 'submit') return ok({ ok:true, emailed:true });
+  return ok({ ok:true });
+}
+
+/* --- BOOT --- */
+fillEvent();
+(function boot() {
+  var want = /[?&]role=(pitcher|judge)/.exec(location.search);
+  if (want) setGateRole(want[1]);
+  if (DEMO) { setGateRole(DEMO); $('#gateEmail').value = DEMO === 'judge' ? 'naledi@harbourventures.co.za' : 'thandi@ubuntuthreads.co.za'; $('#gatePassword').value = 'martini-42'; }
+  var saved = null; try { saved = JSON.parse(sessionStorage.getItem('pmRoyaleAuth') || 'null'); } catch (e) {}
+  if (saved && saved.email && saved.password) {
+    $('#gateEmail').value = saved.email; $('#gatePassword').value = saved.password; setGateRole(saved.role || 'pitcher');
+    tryGate();
+  }
+})();
+</script>
+</body>
+</html>

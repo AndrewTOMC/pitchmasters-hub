@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 28" fill="none">
+  <!-- Pitchmasters Royale: gold flourish divider -->
+  <g stroke="#E6B537" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 14 H128" stroke-width="1.6"/>
+    <path d="M232 14 H354" stroke-width="1.6"/>
+    <path d="M128 14 C140 14 146 5 156 7 C164 9 163 18 156 18 C150 18 151 11 157 12" stroke-width="2"/>
+    <path d="M232 14 C220 14 214 5 204 7 C196 9 197 18 204 18 C210 18 209 11 203 12" stroke-width="2"/>
+    <path d="M150 21 C160 25 170 22 180 14 C190 22 200 25 210 21" stroke-width="1.6"/>
+  </g>
+  <path d="M180 4 L186 14 L180 24 L174 14 Z" fill="#E6B537"/>
+  <circle cx="122" cy="14" r="2.2" fill="#E6B537"/>
+  <circle cx="238" cy="14" r="2.2" fill="#E6B537"/>
+</svg>

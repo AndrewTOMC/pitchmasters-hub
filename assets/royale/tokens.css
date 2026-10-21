@@ -1,0 +1,38 @@
+/* ============================================================
+   PITCHMASTERS ROYALE · shared tokens (hub + admin console)
+   Sampled from the October 2026 Canva posts. Values marked
+   "derived" are not in the posts; they exist for UI legibility.
+   Contrast (WCAG): cream on red 6.2:1 · cream on wine 8.1:1 ·
+   gold on wine 4.8:1 (large text/ornament) · ink on paper 14:1
+   ============================================================ */
+:root{
+  /* grounds */
+  --pm-wine:#663C3D;        /* sampled: top of the poster gradient */
+  --pm-red:#8A4340;         /* sampled: the Royale red, core brand red */
+  --pm-rose:#A5554E;        /* derived: warm glow end of the gradient */
+  --pm-night:#3A2023;       /* derived: deepest wine for dark panels */
+  --pm-night-2:#2A1618;     /* derived: overlays, scrims */
+  /* gold */
+  --pm-gold:#E6B537;        /* sampled: lattice + flourish */
+  --pm-gold-soft:#F2D27A;   /* derived: highlights on gold */
+  --pm-gold-ink:#8A6413;    /* derived: gold text on paper (4.7:1) */
+  /* paper + ink */
+  --pm-cream:#F7EFE3;       /* text on red/wine */
+  --pm-paper:#FBF6EE;       /* form sheets */
+  --pm-paper-2:#F3E8DA;     /* sunken fields, rows */
+  --pm-line:#E4D5C3;        /* hairlines on paper */
+  --pm-ink:#2E1A1B;         /* body text on paper */
+  --pm-ink-2:#5C4A46;       /* secondary text on paper (7.7:1) */
+  --pm-ink-3:#8C7A73;       /* placeholders, meta (large/aux only) */
+  /* states */
+  --pm-ok:#2F7A55; --pm-ok-bg:#E5F1EA; --pm-ok-line:#C7E2D3;
+  --pm-err:#B3261E; --pm-err-bg:#FBE9E7; --pm-err-line:#F2C4BE;
+
+  --pm-gradient:radial-gradient(120% 80% at 70% 62%, var(--pm-rose) 0%, var(--pm-red) 38%, var(--pm-wine) 78%, #57323A 100%);
+
+  --pm-display:'Italiana','Didot','Bodoni 72',Georgia,serif;   /* stand-in for Canva "Alta" */
+  --pm-text:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+
+  --pm-r-sm:6px; --pm-r-md:10px; --pm-r-lg:14px;
+  --pm-shadow:0 18px 48px rgba(42,22,24,.35);
+}

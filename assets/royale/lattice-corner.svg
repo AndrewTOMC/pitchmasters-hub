@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <!-- Pitchmasters Royale: gold lattice corner (top-left orientation; rotate/flip in CSS for other corners) -->
+  <defs>
+    <pattern id="pmLat" width="20" height="34.64" patternUnits="userSpaceOnUse">
+      <path d="M0 0 L20 34.64 M20 0 L0 34.64 M0 17.32 H20" stroke="#E6B537" stroke-width="1.15" stroke-opacity=".9"/>
+      <circle cx="10" cy="17.32" r="2.1" fill="#E6B537" fill-opacity=".55"/>
+      <circle cx="0" cy="0" r="2.1" fill="#E6B537" fill-opacity=".55"/>
+      <circle cx="20" cy="0" r="2.1" fill="#E6B537" fill-opacity=".55"/>
+      <circle cx="0" cy="34.64" r="2.1" fill="#E6B537" fill-opacity=".55"/>
+      <circle cx="20" cy="34.64" r="2.1" fill="#E6B537" fill-opacity=".55"/>
+    </pattern>
+    <clipPath id="pmLatClip">
+      <path d="M0 0 H236 C214 6 196 14 188 30 C180 46 186 62 170 74 C154 86 132 76 118 88 C104 100 112 122 98 138 C84 154 62 146 48 160 C34 174 42 196 28 212 C20 222 10 230 0 236 Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#pmLatClip)">
+    <rect width="240" height="240" fill="#4A2A2C"/>
+    <rect width="240" height="240" fill="url(#pmLat)"/>
+  </g>
+  <path d="M236 0 C214 6 196 14 188 30 C180 46 186 62 170 74 C154 86 132 76 118 88 C104 100 112 122 98 138 C84 154 62 146 48 160 C34 174 42 196 28 212 C20 222 10 230 0 236" stroke="#E6B537" stroke-width="7" stroke-linecap="round"/>
+  <path d="M222 0 C204 8 190 16 182 30" stroke="#F2D27A" stroke-width="1.4" stroke-opacity=".7"/>
+</svg>

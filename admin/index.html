@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pitchmasters Royale · Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/royale/tokens.css">
+<style>
+/* ============================================================
+   PITCHMASTERS ROYALE · ADMIN CONSOLE
+   Single file. Talks to the Apps Script admin_ API (backend/src/20_admin.gs).
+   Sections: base · gate · shell · overview · people · drawer · add · emails · messages · dialogs · responsive
+   ============================================================ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--pm-text);font-size:14px;line-height:1.5;color:var(--pm-ink);background:var(--pm-paper-2);-webkit-font-smoothing:antialiased}
+[hidden]{display:none !important}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--pm-red);font-weight:600}
+a:hover{color:var(--pm-wine)}
+:focus-visible{outline:2px solid var(--pm-gold);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--pm-ink-2)}
+.small{font-size:12.5px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;border-radius:var(--pm-r-md);padding:10px 16px;font-weight:600;font-size:13.5px;line-height:1.2;text-decoration:none;white-space:nowrap}
+.btn--red{background:var(--pm-red);color:var(--pm-cream)}
+.btn--red:hover{background:var(--pm-wine);color:var(--pm-cream)}
+.btn--gold{background:var(--pm-gold);color:var(--pm-ink)}
+.btn--gold:hover{background:var(--pm-gold-soft)}
+.btn--line{background:transparent;color:var(--pm-ink);box-shadow:inset 0 0 0 1.5px var(--pm-line)}
+.btn--line:hover{box-shadow:inset 0 0 0 1.5px var(--pm-ink-2);color:var(--pm-ink)}
+.btn--quiet{background:transparent;color:var(--pm-red);padding:6px 8px}
+.btn--quiet:hover{background:var(--pm-paper-2)}
+.btn--sm{padding:7px 12px;font-size:12.5px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.lbl{font-size:12.5px;font-weight:600;color:var(--pm-ink-2)}
+.inp{width:100%;border:1.5px solid var(--pm-line);border-radius:var(--pm-r-md);padding:10px 12px;font-size:14px;background:#fff;color:var(--pm-ink)}
+.inp:focus{border-color:var(--pm-red);outline:none;box-shadow:0 0 0 3px rgba(138,67,64,.15)}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid2.solo{grid-template-columns:1fr}
+
+/* ---------------- GATE ---------------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--pm-gradient);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.corner{position:absolute;width:clamp(120px,18vw,210px);pointer-events:none}
+.corner--tl{top:0;left:0}
+.corner--tr{top:0;right:0;transform:scaleX(-1)}
+.gate-in{position:relative;width:min(400px,100%);text-align:center;color:var(--pm-cream)}
+.gate-mark{font-family:var(--pm-display);font-weight:400;font-size:clamp(34px,7vw,50px);line-height:1;letter-spacing:2px;margin:0}
+.gate-mark span{display:block;font-size:1.5em;letter-spacing:4px;margin-top:2px}
+.gate-flourish{width:220px;max-width:70%;margin:14px auto 6px;display:block}
+.gate-sub{font-size:14px;opacity:.92;margin:0 0 22px}
+.gate-card{background:var(--pm-paper);color:var(--pm-ink);border-radius:var(--pm-r-lg);padding:22px;text-align:left;box-shadow:var(--pm-shadow);display:flex;flex-direction:column;gap:14px}
+.gate-err{background:var(--pm-err-bg);border:1px solid var(--pm-err-line);color:var(--pm-err);border-radius:var(--pm-r-md);padding:10px 12px;font-size:13px;font-weight:600}
+.gate-foot{font-size:12.5px;opacity:.85;margin-top:16px}
+
+/* ---------------- SHELL ---------------- */
+.adm{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--pm-night);color:var(--pm-cream);display:flex;flex-direction:column;padding:18px 12px 14px;border-right:1px solid rgba(230,181,55,.35);overflow:hidden}
+.side .corner{width:96px;opacity:.55}
+.brand{position:relative;padding:44px 10px 16px;border-bottom:1px solid rgba(230,181,55,.28);margin-bottom:10px}
+.brand .bm{font-family:var(--pm-display);font-size:22px;line-height:1;letter-spacing:1.5px}
+.brand .bs{font-size:12px;color:var(--pm-gold);margin-top:6px;font-weight:500}
+.navi{display:flex;flex-direction:column;gap:2px}
+.navi button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;cursor:pointer;color:rgba(247,239,227,.78);font-size:14px;font-weight:500;padding:10px 12px;border-radius:8px}
+.navi button:hover{background:rgba(247,239,227,.08);color:var(--pm-cream)}
+.navi button.on{background:var(--pm-gold);color:var(--pm-ink);font-weight:600}
+.navi .badge{margin-left:auto;background:var(--pm-red);color:var(--pm-cream);font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px}
+.navi button.on .badge{background:var(--pm-night);color:var(--pm-gold)}
+.side-user{margin-top:auto;border-top:1px solid rgba(230,181,55,.28);padding:12px 10px 0;display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;flex:none;border-radius:50%;background:var(--pm-gold);color:var(--pm-ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.side-user .who{flex:1;min-width:0}
+.side-user .nm{font-size:13px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-user .rl{font-size:11.5px;color:rgba(247,239,227,.7);display:flex;gap:10px;align-items:center}
+.side-user button{white-space:nowrap;background:none;border:none;color:var(--pm-gold);font-size:11.5px;font-weight:600;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.side-user button:hover{color:var(--pm-gold-soft)}
+
+.main{min-width:0}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(243,232,218,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--pm-line);display:flex;align-items:center;gap:14px;padding:16px 30px;flex-wrap:wrap}
+.topbar h1{font-family:var(--pm-display);font-weight:400;font-size:32px;line-height:1;margin:0;letter-spacing:.5px}
+.topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.evpill{font-size:12.5px;font-weight:600;color:var(--pm-wine);background:var(--pm-paper);border:1px solid var(--pm-line);border-radius:999px;padding:6px 12px}
+.demo-flag{font-size:12px;font-weight:700;color:var(--pm-ink);background:var(--pm-gold);border-radius:999px;padding:5px 11px}
+.view{padding:26px 30px 70px;max-width:1200px}
+.card{background:var(--pm-paper);border:1px solid var(--pm-line);border-radius:var(--pm-r-lg)}
+.card-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--pm-line);flex-wrap:wrap}
+.card-h h2{font-size:15px;font-weight:700;margin:0}
+.card-h .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.card-b{padding:18px 20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.note{font-size:13px;color:var(--pm-ink-2);margin:0}
+.empty{padding:34px 20px;text-align:center;color:var(--pm-ink-2)}
+.empty b{display:block;color:var(--pm-ink);font-size:15px;margin-bottom:4px}
+
+/* state chips: each state has its own lightness, plus a text label */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap;line-height:1.5}
+.st-new{background:transparent;color:var(--pm-ink-2);box-shadow:inset 0 0 0 1.5px #CDBBA8}
+.st-invited{background:#F8EED2;color:#6B4E0E}
+.st-started{background:#EBCBC4;color:#6E2F2D}
+.st-complete{background:#A9D3BA;color:#163F2B}
+.st-locked{background:var(--pm-ok);color:#fff}
+.st-withdrawn{background:#5C4A46;color:#F3E8DA}
+.role{font-size:11.5px;font-weight:600;color:var(--pm-wine);background:#F1E1DC;border-radius:6px;padding:2px 8px}
+.role.judge{color:#5B4510;background:#F4E6BE}
+
+/* ---------------- OVERVIEW ---------------- */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.ov-role .big{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.ov-role .big b{font-weight:600;font-size:38px;line-height:1;color:var(--pm-wine)}
+.ov-role .big span{color:var(--pm-ink-2);font-size:13.5px}
+.sbar{display:flex;height:14px;border-radius:999px;overflow:hidden;background:#E9DCCB;margin:4px 0 14px}
+.sbar i{display:block;height:100%}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px}
+.legend button{display:flex;align-items:center;gap:8px;background:none;border:none;padding:4px 0;cursor:pointer;text-align:left;font-size:13px}
+.legend button:hover .lname{text-decoration:underline}
+.legend .n{margin-left:auto;font-weight:700}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.deadline{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.deadline .days{font-family:var(--pm-display);font-size:36px;line-height:1.05;color:var(--pm-red)}
+.deadline .days b{font-family:var(--pm-text);font-weight:600;font-size:.95em}
+.dbar{flex:1;min-width:200px}
+.dbar .track{height:10px;border-radius:999px;background:#E9DCCB;overflow:hidden}
+.dbar .track i{display:block;height:100%;background:linear-gradient(90deg,var(--pm-red),var(--pm-gold))}
+.dbar .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--pm-ink-2);margin-top:6px}
+.kv{display:flex;flex-direction:column;gap:10px}
+.kv .r{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.access-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--pm-line)}
+.access-row:first-child{border-top:none;padding-top:0}
+.access-row .grow{flex:1;min-width:0}
+.access-row .t{font-weight:600}
+
+/* ---------------- PEOPLE ---------------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-bottom:1px solid var(--pm-line)}
+.filters .inp{width:auto;padding:8px 11px;font-size:13.5px}
+.filters input.inp{flex:1;min-width:180px}
+.seg{display:inline-flex;background:var(--pm-paper-2);border-radius:var(--pm-r-md);padding:3px;gap:2px}
+.seg button{border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--pm-ink-2);border-radius:8px;padding:6px 12px}
+.seg button[aria-pressed="true"]{background:var(--pm-paper);color:var(--pm-ink);box-shadow:0 1px 3px rgba(46,26,27,.15)}
+.ptable{width:100%}
+.prow{display:grid;grid-template-columns:minmax(180px,1.6fr) 1.2fr 112px 150px 1fr;gap:14px;align-items:center;padding:12px 20px;border-top:1px solid var(--pm-line);cursor:pointer;background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;font-size:13.5px}
+.prow:hover{background:#FFFDF9}
+.prow.head{cursor:default;font-size:12px;font-weight:600;color:var(--pm-ink-2);border-top:none;padding-top:10px;padding-bottom:10px}
+.prow.head:hover{background:none}
+.pname{font-weight:600;color:var(--pm-ink)}
+.pname small{display:block;font-weight:500;color:var(--pm-ink-2);font-size:12px;margin-top:2px}
+.pbiz{color:var(--pm-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticks{display:flex;gap:5px}
+.tick{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.tick.y{background:var(--pm-ok);color:#fff}
+.tick.n{background:transparent;box-shadow:inset 0 0 0 1.5px #C9B5A2}
+.pact{font-size:12.5px;color:var(--pm-ink-2)}
+.withdrawn-row .pname{text-decoration:line-through;color:var(--pm-ink-2)}
+
+/* ---------------- DRAWER ---------------- */
+.scrim{position:fixed;inset:0;background:rgba(42,22,24,.55);z-index:60;display:flex;justify-content:flex-end}
+.drawer{width:min(520px,100%);height:100%;background:var(--pm-paper);overflow:auto;box-shadow:-20px 0 50px rgba(42,22,24,.3);display:flex;flex-direction:column}
+.drawer>*{flex:none}
+.dr-head{position:sticky;top:0;z-index:2;background:var(--pm-night);color:var(--pm-cream);padding:18px 22px;display:flex;gap:14px;align-items:flex-start;overflow:hidden}
+.dr-head .corner{width:70px;opacity:.5;left:auto;right:0;transform:scaleX(-1)}
+.dr-head h2{font-family:var(--pm-display);font-weight:400;font-size:30px;line-height:1;margin:0 0 6px}
+.dr-head .meta{font-size:13px;color:rgba(247,239,227,.82);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dr-head .st-new{color:var(--pm-cream);box-shadow:inset 0 0 0 1.5px rgba(247,239,227,.55)}
+.dr-x{margin-left:auto;background:none;border:1px solid rgba(247,239,227,.35);color:var(--pm-cream);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1;flex:none;position:relative;z-index:1}
+.dr-body{padding:18px 22px 30px;display:flex;flex-direction:column;gap:18px}
+.dr-sec h3{font-size:13px;font-weight:700;color:var(--pm-wine);margin:0 0 8px}
+.dl{display:grid;grid-template-columns:132px 1fr;gap:8px 14px;font-size:13.5px}
+.dl dt{color:var(--pm-ink-2);font-weight:500}
+.dl dd{margin:0;white-space:pre-wrap;word-break:break-word}
+.dl dd.none{color:#A38F82;font-style:italic}
+.photo{display:flex;gap:14px;align-items:center}
+.photo .ph{width:96px;height:96px;border-radius:var(--pm-r-md);background:var(--pm-paper-2) center/cover no-repeat;border:1px solid var(--pm-line);display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--pm-ink-2);text-align:center;padding:6px;flex:none}
+.creds{background:var(--pm-paper-2);border:1px dashed #C9AE90;border-radius:var(--pm-r-md);padding:12px 14px;font-size:13.5px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.creds code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;font-weight:700;color:var(--pm-wine)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.timeline{font-size:12.5px;color:var(--pm-ink-2);display:grid;grid-template-columns:132px 1fr;gap:4px 14px}
+
+/* ---------------- ADD ---------------- */
+.add-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
+.imp-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.imp-table th{font-size:12px;font-weight:600;color:var(--pm-ink-2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--pm-line)}
+.imp-table td{padding:7px 8px;border-bottom:1px solid var(--pm-line);vertical-align:top}
+.imp-table{min-width:560px}
+.imp-table tr.bad td{background:var(--pm-err-bg)}
+.imp-table tr.bad td{border-bottom:none}
+.imp-table tr.why td{color:var(--pm-err);font-weight:600;font-size:12.5px;padding-top:0;background:var(--pm-err-bg)}
+.imp-wrap{overflow-x:auto}
+
+/* ---------------- EMAILS ---------------- */
+.em-grid{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.em-frame{width:100%;height:760px;border:0;background:#fff;border-radius:0 0 var(--pm-r-lg) var(--pm-r-lg);display:block}
+.subj{font-size:13px;color:var(--pm-ink-2)}
+.subj b{color:var(--pm-ink)}
+.bulk{border-top:1px solid var(--pm-line);padding-top:14px;margin-top:4px}
+.bulk p{margin:0 0 10px}
+
+/* ---------------- MESSAGES ---------------- */
+.msg{padding:16px 20px;border-top:1px solid var(--pm-line)}
+.msg:first-child{border-top:none}
+.msg .who{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
+.msg .who b{font-size:14px}
+.msg p{margin:8px 0 0;white-space:pre-wrap;font-size:14px}
+
+/* ---------------- DIALOG + TOAST ---------------- */
+.dlg-scrim{position:fixed;inset:0;background:rgba(42,22,24,.6);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+.dlg{background:var(--pm-paper);border-radius:var(--pm-r-lg);width:min(520px,100%);max-height:90vh;overflow:auto;box-shadow:var(--pm-shadow)}
+.dlg.wide{width:min(760px,100%)}
+.dlg-h{padding:18px 22px 6px}
+.dlg-h h2{font-family:var(--pm-display);font-weight:400;font-size:28px;margin:0;line-height:1.1}
+.dlg-b{padding:8px 22px 6px}
+.dlg-f{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px 20px;flex-wrap:wrap}
+.namelist{max-height:220px;overflow:auto;background:var(--pm-paper-2);border-radius:var(--pm-r-md);padding:10px 14px;margin:10px 0;font-size:13.5px;columns:2;column-gap:20px}
+.namelist div{break-inside:avoid;padding:2px 0}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--pm-night);color:var(--pm-cream);padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;transition:.25s;z-index:120;max-width:calc(100vw - 32px);text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.loading{padding:40px;text-align:center;color:var(--pm-ink-2)}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width:1060px){
+  .prow{grid-template-columns:minmax(160px,1.5fr) 1fr 112px 104px}
+  .prow .pact{display:none}
+  .em-grid{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .adm{grid-template-columns:1fr}
+  .side{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;gap:8px;border-right:none;border-bottom:1px solid rgba(230,181,55,.35)}
+  .side .corner{display:none}
+  .brand{padding:0 6px;border:none;margin:0}
+  .brand .bm{font-size:21px}
+  .brand .bs{display:none}
+  .side-user{margin:0 0 0 auto;border:none;padding:0;order:2}
+  .brand{order:1}
+  .navi{order:3}
+  #evPill{display:none}
+  .topbar .right{margin-left:auto;flex-wrap:nowrap}
+  .side-user .nm,#meRole{display:none}
+  .side-user .who{flex:none}
+  .side-user button{border:1px solid rgba(247,239,227,.35);border-radius:8px;padding:6px 10px;text-decoration:none;color:var(--pm-cream)}
+  .navi{flex-direction:row;width:100%;overflow-x:auto;gap:4px;padding-bottom:2px}
+  .navi button{width:auto;white-space:nowrap;padding:7px 9px;font-size:13px}
+  .topbar{position:static;padding:14px 16px}
+  .topbar h1{font-size:28px}
+  .view{padding:16px 16px 60px}
+  .ov-grid,.add-grid,.grid2{grid-template-columns:1fr}
+  .prow{grid-template-columns:1fr auto;gap:6px 12px;padding:14px 16px}
+  .prow.head{display:none}
+  .prow .pbiz{grid-column:1/2;grid-row:2;white-space:normal}
+  .prow .pstate{grid-column:2/3;grid-row:1;justify-self:end}
+  .prow .ticks{grid-column:2/3;grid-row:2;justify-self:end}
+  .filters{padding:12px 16px}
+  .card-h,.card-b{padding-left:16px;padding-right:16px}
+  .legend{grid-template-columns:repeat(2,1fr)}
+  .dl,.timeline{grid-template-columns:1fr;gap:2px}
+  .dl dd{margin-bottom:8px}
+  .namelist{columns:1}
+  .em-frame{height:620px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ============================ GATE ============================ -->
+<section id="gate" hidden>
+  <img class="corner corner--tl" src="../assets/royale/lattice-corner.svg" alt="">
+  <img class="corner corner--tr" src="../assets/royale/lattice-corner.svg" alt="">
+  <div class="gate-in">
+    <h1 class="gate-mark">PITCHMASTERS<span>ROYALE</span></h1>
+    <img class="gate-flourish" src="../assets/royale/flourish.svg" alt="">
+    <p class="gate-sub">The console for the 30 October line-up: pitchers, judges and their emails.</p>
+    <form class="gate-card" id="gateForm" autocomplete="on">
+      <div class="field">
+        <label for="gEmail">Your email</label>
+        <input class="inp" id="gEmail" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="gPass">Console password</label>
+        <input class="inp" id="gPass" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="gate-err" id="gErr" role="alert" hidden></div>
+      <button class="btn btn--red" id="gBtn" type="submit" style="width:100%;padding:13px">Open the console</button>
+    </form>
+    <p class="gate-foot">No password yet? Andrew can send you one from the console.</p>
+  </div>
+</section>
+
+<!-- ============================ APP ============================ -->
+<div class="adm" id="app" hidden>
+  <aside class="side">
+    <img class="corner corner--tl" src="../assets/royale/lattice-corner.svg" alt="">
+    <div class="brand">
+      <div class="bm">PITCHMASTERS</div>
+      <div class="bs">Royale console</div>
+    </div>
+    <nav class="navi" id="navi" aria-label="Console sections">
+      <button data-v="overview" class="on">Overview</button>
+      <button data-v="people">People</button>
+      <button data-v="add" data-admin>Add people</button>
+      <button data-v="emails">Emails</button>
+      <button data-v="messages">Messages <span class="badge" id="msgBadge" hidden>0</span></button>
+    </nav>
+    <div class="side-user">
+      <div class="av" id="meAv">A</div>
+      <div class="who"><div class="nm" id="meName">Admin</div><div class="rl"><span id="meRole">Admin</span><button type="button" id="signOut">Sign out</button></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 id="viewTitle">Overview</h1>
+      <div class="right">
+        <span class="demo-flag" id="demoFlag" hidden>Demo data</span>
+        <span class="evpill" id="evPill">Friday 30 October 2026</span>
+        <button class="btn btn--line btn--sm" type="button" id="refresh">Refresh</button>
+      </div>
+    </div>
+    <div class="view" id="view"><div class="loading">Loading the line-up…</div></div>
+  </main>
+</div>
+
+<!-- drawer, dialogs and toast mount here -->
+<div id="drawerMount"></div>
+<div id="dlgMount"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var CONFIG = {
+  apiUrl: 'https://script.google.com/macros/s/AKfycbzG0bBQcG8uOw1QdrFOuSOmysY53N804XaIbGxyxTea_7EA80Qhue3Q59P_HFw3gdqt8w/exec',
+  hubUrl: 'https://pitchershub.vercel.app/',
+  deadline: '2026-10-28T23:59:00+02:00',
+  deadlineLabel: 'Wednesday 28 October',
+  openedLabel: 'Wednesday 21 October',
+  opened: '2026-10-21T00:00:00+02:00',
+  sessionKey: 'pm_console_v2',
+  access: [
+    { email:'lee-anne@getstoryd.com', name:'Lee-Anne Webster', role:'Admin: adds people and sends emails' },
+    { email:'annie@getstoryd.com',    name:'Annie Olufuwa',    role:'View only: sees progress and exports' }
+  ]
+};
+var QS = new URLSearchParams(location.search);
+var DEMO = QS.get('demo') === '1';
+
+var STATES = [
+  { k:'new',       label:'Not invited', sw:'#EFE3D3' },
+  { k:'invited',   label:'Invited',     sw:'#F0D88E' },
+  { k:'started',   label:'Started',     sw:'#C98B80' },
+  { k:'complete',  label:'Complete',    sw:'#6FB08B' },
+  { k:'locked',    label:'Locked in',   sw:'#2F7A55' },
+  { k:'withdrawn', label:'Withdrawn',   sw:'#5C4A46' }
+];
+var STATE_LABEL = {}; STATES.forEach(function (s) { STATE_LABEL[s.k] = s.label; });
+var KIND_LABEL = { invite:'Invitation', reminder:'Reminder', confirmation:'Confirmation' };
+
+/* ============================================================
+   STATE + HELPERS
+   ============================================================ */
+var S = { auth:null, me:null, data:null, view:'overview', filter:{ role:'all', state:'all', q:'' }, email:{ kind:'invite', role:'pitcher', who:'all' }, importRows:null };
+
+var $  = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function isAdmin() { return S.me && S.me.role === 'admin'; }
+function people() { return (S.data && S.data.people) || []; }
+function initials(n) { return String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || '?'; }
+function chip(state) { return '<span class="chip st-' + esc(state) + '">' + esc(STATE_LABEL[state] || state) + '</span>'; }
+function roleTag(r) { return '<span class="role ' + (r === 'judge' ? 'judge' : '') + '">' + (r === 'judge' ? 'Judge' : 'Pitcher') + '</span>'; }
+function lastActivity(p) {
+  if (p.lockedAt) return 'Locked in ' + p.lockedAt;
+  if (p.lastUpdated) return 'Updated ' + p.lastUpdated;
+  if (p.firstSeen) return 'Signed in ' + p.firstSeen;
+  if (p.inviteSent) return 'Invited ' + p.inviteSent;
+  return 'No activity yet';
+}
+var toastT;
+function toast(msg, ms) {
+  var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('show'); }, ms || 3200);
+}
+function errText(res) {
+  var e = res && res.error;
+  return ({
+    auth: 'Your session has ended. Sign in again.',
+    forbidden: 'Your login is view only, so that action is not available.',
+    network: "Couldn't reach the backend. Check your connection and try again.",
+    duplicate: 'Someone else on the list already uses that email.',
+    bad_email: 'That email address does not look right.',
+    not_found: "That person isn't on the list any more. Refresh and try again.",
+    send_failed: 'The email did not send. Check the sender alias in Gmail, then try again.',
+    server: 'The backend hit a problem: ' + ((res && res.detail) || 'unknown') + '.'
+  })[e] || ('Something went wrong (' + (e || 'unknown') + '). Refresh and try again.');
+}
+function copyText(txt, btn) {
+  var done = function () { if (btn) { var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = o; }, 1400); } };
+  var fb = function () { var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); done(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fb); else fb();
+}
+
+/* ============================================================
+   API · plain-text POST (no content-type header, no preflight)
+   ============================================================ */
+function api(op, payload) {
+  if (DEMO) return demoApi(op, payload || {});
+  var body = Object.assign({ action:'admin', op:op, auth:S.auth }, payload || {});
+  return fetch(CONFIG.apiUrl, { method:'POST', body:JSON.stringify(body) })
+    .then(function (r) { return r.json(); })
+    .catch(function () { return { ok:false, error:'network' }; })
+    .then(function (res) {
+      if (res && !res.ok && res.error === 'auth' && op !== 'login') { signOut(true); }
+      return res || { ok:false, error:'network' };
+    });
+}
+
+/* ============================================================
+   GATE
+   ============================================================ */
+function showGate(msg) {
+  $('#app').hidden = true; $('#gate').hidden = false;
+  var e = $('#gErr'); e.hidden = !msg; e.textContent = msg || '';
+  setTimeout(function () { ($('#gEmail').value ? $('#gPass') : $('#gEmail')).focus(); }, 30);
+}
+$('#gateForm').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var email = $('#gEmail').value.trim().toLowerCase(), pass = $('#gPass').value.trim();
+  if (!email || !pass) { showGate('Enter your email and console password.'); return; }
+  var btn = $('#gBtn'); btn.disabled = true; btn.textContent = 'Checking…';
+  S.auth = { email:email, password:pass };
+  api('login').then(function (res) {
+    btn.disabled = false; btn.textContent = 'Open the console';
+    if (!res.ok) {
+      S.auth = null;
+      showGate(res.error === 'auth'
+        ? "Those details don't match a console login. Check the email and password, or ask Andrew to resend your access."
+        : "Couldn't reach the backend just now. Check your connection and try again in a minute.");
+      return;
+    }
+    try { sessionStorage.setItem(CONFIG.sessionKey, JSON.stringify(S.auth)); } catch (e) {}
+    start(res);
+  });
+});
+function signOut(expired) {
+  try { sessionStorage.removeItem(CONFIG.sessionKey); } catch (e) {}
+  S.auth = null; S.me = null; S.data = null;
+  $('#gPass').value = '';
+  showGate(expired ? 'Your session has ended. Sign in again.' : '');
+}
+$('#signOut').addEventListener('click', function () { signOut(false); });
+
+function start(loginRes) {
+  S.me = loginRes.admin;
+  $('#gate').hidden = true; $('#app').hidden = false;
+  $('#meName').textContent = S.me.name;
+  $('#meRole').textContent = isAdmin() ? 'Admin' : 'View only';
+  $('#meAv').textContent = initials(S.me.name);
+  $('#demoFlag').hidden = !DEMO;
+  if (loginRes.event && loginRes.event.dateLong) $('#evPill').textContent = loginRes.event.name + ', ' + loginRes.event.dateLong;
+  $$('[data-admin]').forEach(function (el) { el.hidden = !isAdmin(); });
+  load().then(function () { show(S.view); });
+}
+function load() {
+  $('#view').innerHTML = '<div class="loading">Loading the line-up…</div>';
+  return api('list').then(function (res) {
+    if (!res.ok) { $('#view').innerHTML = '<div class="empty"><b>Could not load the list</b>' + esc(errText(res)) + '</div>'; return; }
+    S.data = res;
+    var n = (res.messages || []).length;
+    $('#msgBadge').hidden = !n; $('#msgBadge').textContent = n;
+  });
+}
+$('#refresh').addEventListener('click', function () { load().then(function () { show(S.view); toast('Up to date'); }); });
+
+/* ============================================================
+   NAV
+   ============================================================ */
+var TITLES = { overview:'Overview', people:'People', add:'Add people', emails:'Emails', messages:'Messages' };
+$$('#navi button').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.v); }); });
+function show(v) {
+  if (v === 'add' && !isAdmin()) v = 'overview';
+  S.view = v;
+  $$('#navi button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false'); });
+  $('#viewTitle').textContent = TITLES[v];
+  if (!S.data) return;
+  ({ overview:vOverview, people:vPeople, add:vAdd, emails:vEmails, messages:vMessages })[v]();
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   OVERVIEW
+   ============================================================ */
+function counts(role) {
+  var c = { total:0 }; STATES.forEach(function (s) { c[s.k] = 0; });
+  people().forEach(function (p) { if (p.role !== role) return; c[p.state] = (c[p.state] || 0) + 1; c.total++; });
+  return c;
+}
+function roleCard(role, title) {
+  var c = counts(role), active = c.total - c.withdrawn, done = c.complete + c.locked;
+  var bar = STATES.map(function (s) { return c[s.k] ? '<i style="width:' + (c[s.k] / c.total * 100) + '%;background:' + s.sw + '" title="' + s.label + ': ' + c[s.k] + '"></i>' : ''; }).join('');
+  var leg = STATES.map(function (s) {
+    return '<button type="button" data-jump="' + role + '|' + s.k + '"><span class="sw" style="background:' + s.sw + (s.k === 'new' ? ';box-shadow:inset 0 0 0 1.5px #CDBBA8' : '') + '"></span><span class="lname">' + s.label + '</span><span class="n">' + c[s.k] + '</span></button>';
+  }).join('');
+  return '<div class="card ov-role"><div class="card-h"><h2>' + title + '</h2><div class="right"><button class="btn btn--quiet btn--sm" data-jump="' + role + '|all">See all</button></div></div>' +
+    '<div class="card-b">' + (c.total
+      ? '<div class="big"><b>' + done + '</b><span>of ' + active + ' ready (complete or locked in)</span></div><div class="sbar" role="img" aria-label="' + title + ' by state">' + bar + '</div><div class="legend">' + leg + '</div>'
+      : '<div class="empty" style="padding:16px 0"><b>No ' + title.toLowerCase() + ' yet</b>' + (isAdmin() ? 'Add them on the Add people page.' : 'They will show here once they are added.') + '</div>') +
+    '</div></div>';
+}
+function vOverview() {
+  var now = Date.now(), dl = new Date(CONFIG.deadline).getTime(), op = new Date(CONFIG.opened).getTime();
+  var sast = function (t) { return Math.floor((t + 2 * 3600000) / 86400000); };   // calendar day in Cape Town
+  var days = sast(dl) - sast(now);
+  if (now > dl) days = -1;
+  var pct = Math.max(0, Math.min(100, (now - op) / (dl - op) * 100));
+  var d = S.data, msgs = (d.messages || []).length;
+  var dayTxt = days > 1 ? '<b>' + days + '</b> days left' : days === 1 ? '<b>1</b> day left' : days === 0 ? 'Due today' : 'Deadline passed';
+
+  var side = '<div class="card"><div class="card-h"><h2>At a glance</h2></div><div class="card-b kv">' +
+    '<div class="r"><span>Messages from the hub</span><span><b>' + msgs + '</b> <button class="btn btn--quiet btn--sm" data-go="messages">Read</button></span></div>' +
+    (isAdmin() && d.quota != null ? '<div class="r"><span>Emails you can still send today</span><b>' + esc(d.quota) + '</b></div>' : '') +
+    (isAdmin() && d.sheetUrl ? '<div class="r"><span>The Google Sheet</span><a href="' + esc(d.sheetUrl) + '" target="_blank" rel="noopener">Open sheet</a></div>' : '') +
+    (isAdmin() && d.folderUrl ? '<div class="r"><span>Photos in Drive</span><a href="' + esc(d.folderUrl) + '" target="_blank" rel="noopener">Open folder</a></div>' : '') +
+    '<div class="r"><span>The Pitch Hub</span><a href="' + esc(CONFIG.hubUrl) + '" target="_blank" rel="noopener">Open hub</a></div>' +
+    '</div></div>';
+
+  var access = isAdmin() ? '<div class="card"><div class="card-h"><h2>Console access</h2></div><div class="card-b">' +
+    '<p class="note" style="margin-bottom:12px">Emails each person their own console login.</p>' +
+    CONFIG.access.map(function (a) {
+      return '<div class="access-row"><div class="av" style="background:var(--pm-paper-2);color:var(--pm-wine)">' + initials(a.name) + '</div><div class="grow"><div class="t">' + esc(a.name) + '</div><div class="small muted">' + esc(a.role) + '</div></div>' +
+        '<button class="btn btn--line btn--sm" data-access="' + esc(a.email) + '">Send access</button></div>';
+    }).join('') + '</div></div>' : '';
+
+  $('#view').innerHTML =
+    '<div class="card" style="margin-bottom:16px"><div class="card-b deadline">' +
+      '<div><div class="days">' + dayTxt + '</div><div class="small muted">Everything due ' + esc(CONFIG.deadlineLabel) + '</div></div>' +
+      '<div class="dbar"><div class="track"><i style="width:' + pct + '%"></i></div><div class="lab"><span>Hub opened ' + esc(CONFIG.openedLabel) + '</span><span>Deadline</span></div></div>' +
+    '</div></div>' +
+    '<div class="ov-grid">' + roleCard('pitcher', 'Pitchers') + roleCard('judge', 'Judges') + '</div>' +
+    '<div class="ov-grid" style="margin-top:16px"><div>' + side + '</div><div>' + access + '</div></div>';
+
+  $$('[data-jump]').forEach(function (b) { b.addEventListener('click', function () { var x = b.dataset.jump.split('|'); S.filter.role = x[0]; S.filter.state = x[1]; S.filter.q = ''; show('people'); }); });
+  $$('[data-go]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.go); }); });
+  $$('[data-access]').forEach(function (b) { b.addEventListener('click', function () {
+    var a = CONFIG.access.filter(function (x) { return x.email === b.dataset.access; })[0];
+    confirmDlg('Send console access?', '<p>This emails <b>' + esc(a.name) + '</b> (' + esc(a.email) + ') their console link, email and password from the Admins tab.</p>', 'Send access email', function () {
+      b.disabled = true;
+      return api('sendAccess', { email:a.email }).then(function (res) { b.disabled = false; toast(res.ok ? 'Access sent to ' + a.name : errText(res)); });
+    });
+  }); });
+}
+
+/* ============================================================
+   PEOPLE
+   ============================================================ */
+function filtered() {
+  var f = S.filter, q = f.q.trim().toLowerCase();
+  return people().filter(function (p) {
+    if (f.role !== 'all' && p.role !== f.role) return false;
+    if (f.state !== 'all' && p.state !== f.state) return false;
+    if (q && (p.name + ' ' + p.email + ' ' + p.business + ' ' + p.code).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  }).sort(function (a, b) { return (a.role === b.role ? 0 : a.role === 'pitcher' ? -1 : 1) || a.name.localeCompare(b.name); });
+}
+function ticks(p) {
+  var t = [['photo','Photo'],['profile', p.role === 'judge' ? 'Profile' : 'Programme'],['logistics','Logistics']];
+  return '<span class="ticks">' + t.map(function (x) {
+    var y = p.checks && p.checks[x[0]];
+    return '<span class="tick ' + (y ? 'y' : 'n') + '" title="' + x[1] + (y ? ' in' : ' missing') + '">' + (y ? '✓' : '') + '<span class="sr">' + x[1] + (y ? ' in' : ' missing') + '</span></span>';
+  }).join('') + '</span>';
+}
+function vPeople() {
+  var f = S.filter;
+  $('#view').innerHTML =
+    '<div class="card"><div class="card-h"><h2 id="pcount"></h2><div class="right">' +
+      (isAdmin() ? '<button class="btn btn--line btn--sm" data-go="add">Add people</button>' : '') +
+      '<button class="btn btn--gold btn--sm" id="exportBtn">Export CSV</button></div></div>' +
+    '<div class="filters">' +
+      '<div class="seg" role="group" aria-label="Role">' + [['all','Everyone'],['pitcher','Pitchers'],['judge','Judges']].map(function (r) { return '<button type="button" data-role="' + r[0] + '" aria-pressed="' + (f.role === r[0]) + '">' + r[1] + '</button>'; }).join('') + '</div>' +
+      '<label class="sr" for="fState">State</label><select class="inp" id="fState"><option value="all">Any state</option>' + STATES.map(function (s) { return '<option value="' + s.k + '"' + (f.state === s.k ? ' selected' : '') + '>' + s.label + '</option>'; }).join('') + '</select>' +
+      '<label class="sr" for="fQ">Search</label><input class="inp" id="fQ" type="search" placeholder="Search name, email or business" value="' + esc(f.q) + '">' +
+    '</div><div id="plist"></div></div>';
+  $$('[data-role]').forEach(function (b) { b.addEventListener('click', function () { f.role = b.dataset.role; $$('[data-role]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); paintList(); }); });
+  $('#fState').addEventListener('change', function (e) { f.state = e.target.value; paintList(); });
+  $('#fQ').addEventListener('input', function (e) { f.q = e.target.value; paintList(); });
+  $('#exportBtn').addEventListener('click', exportCsv);
+  $$('[data-go]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.go); }); });
+  paintList();
+}
+function paintList() {
+  var list = filtered();
+  $('#pcount').textContent = list.length + (list.length === 1 ? ' person' : ' people');
+  if (!people().length) {
+    $('#plist').innerHTML = '<div class="empty"><b>Nobody on the list yet</b>' + (isAdmin() ? 'Add the October pitchers and judges on the Add people page.' : 'Once the team adds pitchers and judges, they show up here.') + '</div>';
+    return;
+  }
+  if (!list.length) { $('#plist').innerHTML = '<div class="empty"><b>No one matches</b>Change the filters or clear the search.</div>'; return; }
+  $('#plist').innerHTML = '<div class="prow head" aria-hidden="true"><span>Name</span><span>Business or company</span><span>State</span><span>Photo, copy, logistics</span><span class="pact">Last activity</span></div>' +
+    list.map(function (p) {
+      return '<button type="button" class="prow' + (p.state === 'withdrawn' ? ' withdrawn-row' : '') + '" data-email="' + esc(p.email) + '">' +
+        '<span class="pname">' + esc(p.name || p.email) + '<small>' + roleTag(p.role) + ' ' + esc(p.email) + '</small></span>' +
+        '<span class="pbiz">' + esc(p.business || (p.role === 'judge' ? 'Company not added' : 'Business not added')) + '</span>' +
+        '<span class="pstate">' + chip(p.state) + '</span>' + ticks(p) +
+        '<span class="pact">' + esc(lastActivity(p)) + '</span></button>';
+    }).join('');
+  $$('.prow[data-email]').forEach(function (r) { r.addEventListener('click', function () { openDrawer(r.dataset.email); }); });
+}
+
+/* ---------------- CSV export ---------------- */
+function exportCsv() {
+  var cols = [['code','Code'],['role','Role'],['first','First name'],['surname','Surname'],['email','Email'],['phone','Mobile'],
+    ['business','Business or company'],['title','Title'],['tagline','Tagline'],['synopsis','Synopsis'],['bio','Bio'],['lens','Judging lens'],
+    ['linkedin','LinkedIn'],['arrival','Arrival'],['onStageNeeds','On-stage needs'],['dietary','Dietary or access'],['notes','Notes'],
+    ['stateLabel','State'],['photoIn','Photo in'],['coverUrl','Photo link'],['folderUrl','Drive folder'],['inviteSent','Invite sent'],
+    ['lastReminded','Last reminded'],['confirmSent','Confirmation sent'],['lockedAt','Locked in']];
+  if (isAdmin()) cols.push(['password','Hub password']);
+  var rows = filtered().map(function (p) {
+    var x = Object.assign({}, p, { stateLabel:STATE_LABEL[p.state] || p.state, photoIn:p.checks && p.checks.photo ? 'Yes' : 'No', role:p.role === 'judge' ? 'Judge' : 'Pitcher' });
+    if (!isAdmin()) delete x.password;
+    return cols.map(function (c) { var v = x[c[0]] == null ? '' : String(x[c[0]]); return '"' + v.replace(/"/g, '""') + '"'; }).join(',');
+  });
+  var csv = '﻿' + cols.map(function (c) { return '"' + c[1] + '"'; }).join(',') + '\n' + rows.join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = 'pitchmasters-royale-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Exported ' + rows.length + ' rows');
+}
+
+/* ============================================================
+   DRAWER
+   ============================================================ */
+var lastFocus;
+function findP(email) { return people().filter(function (p) { return p.email === email; })[0]; }
+function dl(rows) {
+  return '<dl class="dl">' + rows.map(function (r) {
+    var v = r[1];
+    var html = r[2] === 'link' && v ? '<a href="' + esc(/^https?:/.test(v) ? v : 'https://' + v) + '" target="_blank" rel="noopener">' + esc(v) + '</a>' : esc(v);
+    return '<dt>' + r[0] + '</dt><dd' + (v ? '' : ' class="none"') + '>' + (v ? html : 'Not added') + '</dd>';
+  }).join('') + '</dl>';
+}
+function openDrawer(email) {
+  var p = findP(email); if (!p) return;
+  lastFocus = document.activeElement;
+  var judge = p.role === 'judge';
+  var prog = judge
+    ? dl([['Title', p.title], ['Company', p.business], ['Judging lens', p.lens], ['LinkedIn', p.linkedin, 'link'], ['Bio', p.bio]])
+    : dl([['Business', p.business], ['Tagline', p.tagline], ['Synopsis', p.synopsis]]);
+  var logi = dl([['Arrival', p.arrival]].concat(judge ? [] : [['On-stage needs', p.onStageNeeds]]).concat([['Mobile', p.phone], ['Dietary or access', p.dietary], ['Notes', p.notes]]));
+  var wd = p.state === 'withdrawn';
+
+  var adminBlock = isAdmin() ? (
+    '<section class="dr-sec"><h3>Hub sign-in</h3><div class="creds"><span>Email <code>' + esc(p.email) + '</code></span><span>Password <code>' + esc(p.password || '') + '</code></span>' +
+    '<button class="btn btn--line btn--sm" id="dCopy">Copy sign-in</button></div></section>' +
+    '<section class="dr-sec"><h3>Send an email</h3><div class="btnrow">' +
+      '<button class="btn btn--red btn--sm" data-send="invite"' + (wd ? ' disabled' : '') + '>Send invitation</button>' +
+      '<button class="btn btn--line btn--sm" data-send="reminder"' + (wd || p.state === 'complete' || p.state === 'locked' ? ' disabled title="Only for people who still have things to do"' : '') + '>Send reminder</button>' +
+      '<button class="btn btn--line btn--sm" data-send="confirmation"' + (wd ? ' disabled' : '') + '>Send confirmation</button>' +
+      '<button class="btn btn--quiet btn--sm" id="dPrev">Preview email</button>' +
+    '</div></section>' +
+    '<section class="dr-sec"><h3>Manage</h3><div class="btnrow">' +
+      '<button class="btn btn--line btn--sm" id="dEdit">Edit details</button>' +
+      '<button class="btn btn--line btn--sm" id="dReset">Reset password</button>' +
+      '<button class="btn btn--line btn--sm" id="dWd">' + (wd ? 'Restore to the line-up' : 'Withdraw from the line-up') + '</button>' +
+    '</div></section>'
+  ) : '<section class="dr-sec"><div class="btnrow"><button class="btn btn--quiet btn--sm" id="dPrev">Preview their email</button></div></section>';
+
+  $('#drawerMount').innerHTML =
+    '<div class="scrim" id="drScrim"><div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drName">' +
+      '<div class="dr-head"><img class="corner corner--tl" src="../assets/royale/lattice-corner.svg" alt="">' +
+        '<div style="position:relative;min-width:0"><h2 id="drName">' + esc(p.name || p.email) + '</h2><div class="meta">' + roleTag(p.role) + chip(p.state) + '<span>' + esc(p.code || '') + '</span></div></div>' +
+        '<button class="dr-x" id="drX" aria-label="Close">×</button></div>' +
+      '<div class="dr-body">' +
+        '<section class="dr-sec"><h3>' + (judge ? 'Headshot' : 'Photo') + '</h3><div class="photo"><div class="ph" id="drPh">' + (p.checks && p.checks.photo ? 'Loading…' : 'No photo yet') + '</div>' +
+          '<div class="small">' + (p.coverUrl ? '<a href="' + esc(p.coverUrl) + '" target="_blank" rel="noopener">Open full photo</a><br>' : '') + (p.folderUrl ? '<a href="' + esc(p.folderUrl) + '" target="_blank" rel="noopener">Open their Drive folder</a>' : '<span class="muted">Their Drive folder appears after the first upload.</span>') + '</div></div></section>' +
+        '<section class="dr-sec"><h3>' + (judge ? 'Judge profile' : 'Programme copy') + '</h3>' + prog + '</section>' +
+        '<section class="dr-sec"><h3>Logistics</h3>' + logi + '</section>' +
+        '<section class="dr-sec"><h3>Contact</h3>' + dl([['Email', p.email], ['Mobile', p.phone]]) + '</section>' +
+        adminBlock +
+        '<section class="dr-sec"><h3>History</h3><div class="timeline">' +
+          [['Invite sent', p.inviteSent], ['First sign-in', p.firstSeen], ['Last update', p.lastUpdated], ['Last reminder', p.lastReminded], ['Locked in', p.lockedAt], ['Confirmation sent', p.confirmSent]]
+            .map(function (r) { return '<span>' + r[0] + '</span><span>' + esc(r[1] || 'Not yet') + '</span>'; }).join('') +
+        '</div></section>' +
+      '</div></div></div>';
+
+  var close = function () { $('#drawerMount').innerHTML = ''; document.removeEventListener('keydown', onKey); if (lastFocus) lastFocus.focus(); };
+  var onKey = function (e) { if (e.key === 'Escape' && !$('#dlgMount').innerHTML) close(); };
+  document.addEventListener('keydown', onKey);
+  $('#drX').addEventListener('click', close);
+  $('#drScrim').addEventListener('click', function (e) { if (e.target.id === 'drScrim') close(); });
+  $('#drX').focus();
+
+  if (p.checks && p.checks.photo) api('thumb', { email:p.email }).then(function (r) {
+    var ph = $('#drPh'); if (!ph) return;
+    if (r.ok && r.thumb) { ph.style.backgroundImage = 'url("' + r.thumb + '")'; ph.textContent = ''; ph.setAttribute('role', 'img'); ph.setAttribute('aria-label', 'Photo of ' + p.name); }
+    else ph.textContent = 'Preview unavailable. Open the full photo.';
+  });
+
+  $('#dPrev').addEventListener('click', function () { previewDlg(p); });
+  if (!isAdmin()) return;
+  $('#dCopy').addEventListener('click', function (e) { copyText('Pitch Hub: ' + CONFIG.hubUrl + '\nEmail: ' + p.email + '\nPassword: ' + p.password + '\nSign in as: ' + (judge ? 'Judge' : 'Pitcher'), e.target); });
+  $$('[data-send]').forEach(function (b) { b.addEventListener('click', function () {
+    var k = b.dataset.send;
+    confirmDlg('Send the ' + KIND_LABEL[k].toLowerCase() + '?', '<p>This emails <b>' + esc(p.name) + '</b> at ' + esc(p.email) + ' from Andrew\'s address.</p>', 'Send ' + KIND_LABEL[k].toLowerCase(), function () {
+      return api('send', { kind:k, emails:[p.email] }).then(function (res) { return afterSend(res, k, p.email); });
+    });
+  }); });
+  $('#dEdit').addEventListener('click', function () { editDlg(p); });
+  $('#dReset').addEventListener('click', function () {
+    confirmDlg('Reset their password?', '<p>' + esc(p.name) + ' gets a new hub password. The old one stops working straight away, so send them a fresh invitation afterwards.</p>', 'Reset password', function () {
+      return api('resetPassword', { email:p.email }).then(function (res) { if (!res.ok) return toast(errText(res)); toast('New password: ' + res.password, 5000); return reloadKeep(p.email); });
+    });
+  });
+  $('#dWd').addEventListener('click', function () {
+    confirmDlg(wd ? 'Restore to the line-up?' : 'Withdraw from the line-up?', wd ? '<p>' + esc(p.name) + ' can sign in to the hub again and gets emails.</p>' : '<p>' + esc(p.name) + ' stays in the sheet, but can no longer sign in and is skipped by bulk emails. You can restore them later.</p>', wd ? 'Restore' : 'Withdraw', function () {
+      return api('withdraw', { email:p.email, withdrawn:!wd }).then(function (res) { if (!res.ok) return toast(errText(res)); toast(wd ? 'Restored' : 'Withdrawn'); return reloadKeep(p.email); });
+    });
+  });
+}
+function reloadKeep(email) {
+  return load().then(function () { show(S.view); if (email && findP(email)) openDrawer(email); });
+}
+function afterSend(res, kind, email) {
+  if (!res.ok) { toast(errText(res), 5000); return; }
+  var msg = 'Sent ' + res.sent + ' ' + KIND_LABEL[kind].toLowerCase() + (res.sent === 1 ? '' : 's');
+  if (res.skipped && res.skipped.length) msg += ', skipped ' + res.skipped.length;
+  if (res.failed && res.failed.length) msg += ', ' + res.failed.length + ' failed';
+  toast(msg, 4500);
+  if (res.failed && res.failed.length) infoDlg('Some emails did not send', '<p>' + res.failed.map(function (f) { return esc(f.email) + ': ' + esc(f.reason); }).join('<br>') + '</p><p class="note">The most common cause is the sender alias. Check that helloyou@andrewwolhuter.com is still a "Send mail as" address in Gmail.</p>');
+  return reloadKeep(email);
+}
+
+/* ============================================================
+   DIALOGS
+   ============================================================ */
+var dlgSeq = 0;
+function dlg(html, wide) {
+  var prev = document.activeElement, mine = ++dlgSeq;
+  $('#dlgMount').innerHTML = '<div class="dlg-scrim" id="dlgScrim"><div class="dlg' + (wide ? ' wide' : '') + '" role="dialog" aria-modal="true">' + html + '</div></div>';
+  var close = function () {
+    document.removeEventListener('keydown', k);
+    if (mine !== dlgSeq) return;            // a newer dialog replaced this one; leave it open
+    $('#dlgMount').innerHTML = ''; if (prev && prev.focus && document.contains(prev)) prev.focus();
+  };
+  var k = function (e) { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', k);
+  $('#dlgScrim').addEventListener('click', function (e) { if (e.target.id === 'dlgScrim') close(); });
+  $$('[data-close]', $('#dlgMount')).forEach(function (b) { b.addEventListener('click', close); });
+  var first = $('#dlgMount [data-primary]') || $('#dlgMount button');
+  if (first) first.focus();
+  return close;
+}
+function confirmDlg(title, body, okLabel, onOk) {
+  var close = dlg('<div class="dlg-h"><h2>' + esc(title) + '</h2></div><div class="dlg-b">' + body + '</div><div class="dlg-f"><button class="btn btn--line" data-close>Cancel</button><button class="btn btn--red" data-primary id="dlgOk">' + esc(okLabel) + '</button></div>');
+  $('#dlgOk').addEventListener('click', function () {
+    var b = $('#dlgOk'); b.disabled = true; b.textContent = 'Working…';
+    Promise.resolve(onOk()).then(close, close);
+  });
+}
+function infoDlg(title, body) {
+  dlg('<div class="dlg-h"><h2>' + esc(title) + '</h2></div><div class="dlg-b">' + body + '</div><div class="dlg-f"><button class="btn btn--red" data-close data-primary>Close</button></div>');
+}
+function previewDlg(p) {
+  var kind = p.state === 'new' ? 'invite' : (p.state === 'complete' || p.state === 'locked') ? 'confirmation' : 'reminder';
+  dlg('<div class="dlg-h"><h2>Email preview</h2></div><div class="dlg-b">' +
+      '<div class="seg" role="group" aria-label="Email">' + ['invite','reminder','confirmation'].map(function (k) { return '<button type="button" data-pk="' + k + '" aria-pressed="' + (k === kind) + '">' + KIND_LABEL[k] + '</button>'; }).join('') + '</div>' +
+      '<p class="subj" id="pvSubj" style="margin:12px 0 8px">Loading…</p><iframe class="em-frame" id="pvFrame" title="Email preview" sandbox="" style="height:560px;border:1px solid var(--pm-line);border-radius:var(--pm-r-md)"></iframe></div>' +
+      '<div class="dlg-f"><button class="btn btn--red" data-close data-primary>Close</button></div>', true);
+  var load1 = function (k) {
+    $('#pvSubj').textContent = 'Loading…';
+    api('preview', { kind:k, role:p.role, email:p.email }).then(function (r) {
+      if (!$('#pvFrame')) return;
+      if (!r.ok) { $('#pvSubj').textContent = errText(r); return; }
+      $('#pvSubj').innerHTML = 'Subject: <b>' + esc(r.subject) + '</b>';
+      $('#pvFrame').srcdoc = r.html;
+    });
+  };
+  $$('[data-pk]').forEach(function (b) { b.addEventListener('click', function () { $$('[data-pk]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); load1(b.dataset.pk); }); });
+  load1(kind);
+}
+function personForm(p) {
+  p = p || {};
+  return '<div class="stack">' +
+    '<div class="grid2"><div class="field"><label for="fFirst">First name</label><input class="inp" id="fFirst" value="' + esc(p.first) + '" required></div>' +
+    '<div class="field"><label for="fSur">Surname</label><input class="inp" id="fSur" value="' + esc(p.surname) + '"></div></div>' +
+    '<div class="grid2"><div class="field"><label for="fEm">Email</label><input class="inp" id="fEm" type="email" value="' + esc(p.email) + '" required></div>' +
+    '<div class="field"><label for="fPh">Mobile</label><input class="inp" id="fPh" type="tel" value="' + esc(p.phone) + '" placeholder="+27 …"></div></div>' +
+    '<div class="field"><span class="lbl">Role</span><div class="seg" role="radiogroup" aria-label="Role">' +
+      '<button type="button" role="radio" data-frole="pitcher" aria-pressed="' + (p.role !== 'judge') + '" aria-checked="' + (p.role !== 'judge') + '">Pitcher</button>' +
+      '<button type="button" role="radio" data-frole="judge" aria-pressed="' + (p.role === 'judge') + '" aria-checked="' + (p.role === 'judge') + '">Judge</button></div></div>' +
+    '<div class="grid2' + (p.role === 'judge' ? '' : ' solo') + '" id="fBizRow"><div class="field"><label for="fBiz" id="fBizL">' + (p.role === 'judge' ? 'Company' : 'Business') + '</label><input class="inp" id="fBiz" value="' + esc(p.business) + '"></div>' +
+    '<div class="field" id="fTitleW"' + (p.role === 'judge' ? '' : ' hidden') + '><label for="fTitle">Job title</label><input class="inp" id="fTitle" value="' + esc(p.title) + '"></div></div>' +
+    '<div class="gate-err" id="fErr" role="alert" hidden></div>' +
+  '</div>';
+}
+function bindPersonForm(scope) {
+  var role = $$('[data-frole]', scope).filter(function (b) { return b.getAttribute('aria-pressed') === 'true'; })[0].dataset.frole;
+  $$('[data-frole]', scope).forEach(function (b) { b.addEventListener('click', function () {
+    role = b.dataset.frole;
+    $$('[data-frole]', scope).forEach(function (x) { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); });
+    $('#fBizL', scope).textContent = role === 'judge' ? 'Company' : 'Business';
+    $('#fTitleW', scope).hidden = role !== 'judge';
+    $('#fBizRow', scope).classList.toggle('solo', role !== 'judge');
+  }); });
+  return function () {
+    return { first:$('#fFirst', scope).value.trim(), surname:$('#fSur', scope).value.trim(), email:$('#fEm', scope).value.trim().toLowerCase(),
+             phone:$('#fPh', scope).value.trim(), role:role, business:$('#fBiz', scope).value.trim(), title:role === 'judge' ? $('#fTitle', scope).value.trim() : '' };
+  };
+}
+function validPerson(x) {
+  if (!x.first) return 'Add a first name.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email)) return 'That email address does not look right.';
+  return '';
+}
+function editDlg(p) {
+  var close = dlg('<div class="dlg-h"><h2>Edit ' + esc(p.first || p.name) + '</h2></div><div class="dlg-b" id="edScope">' + personForm(p) +
+    '<p class="note" style="margin-top:12px">Their programme copy, bio and logistics are theirs to edit in the hub.</p></div>' +
+    '<div class="dlg-f"><button class="btn btn--line" data-close>Cancel</button><button class="btn btn--red" id="edSave" data-primary>Save changes</button></div>');
+  var read = bindPersonForm($('#edScope'));
+  $('#edSave').addEventListener('click', function () {
+    var x = read(), bad = validPerson(x);
+    if (bad) { $('#fErr').hidden = false; $('#fErr').textContent = bad; return; }
+    x.originalEmail = p.email;
+    $('#edSave').disabled = true; $('#edSave').textContent = 'Saving…';
+    api('savePerson', { person:x }).then(function (res) {
+      if (!res.ok) { $('#edSave').disabled = false; $('#edSave').textContent = 'Save changes'; $('#fErr').hidden = false; $('#fErr').textContent = errText(res); return; }
+      close(); toast('Saved'); reloadKeep(x.email);
+    });
+  });
+}
+
+/* ============================================================
+   ADD PEOPLE
+   ============================================================ */
+function vAdd() {
+  $('#view').innerHTML = '<div class="add-grid">' +
+    '<div class="card"><div class="card-h"><h2>Add one person</h2></div><div class="card-b" id="addScope">' + personForm({ role:'pitcher' }) +
+      '<div class="btnrow" style="margin-top:16px"><button class="btn btn--red" id="addBtn">Add to the line-up</button></div>' +
+      '<p class="note" style="margin-top:12px">They get a code and a hub password straight away. Nothing is emailed until you send the invitation.</p></div></div>' +
+    '<div class="card"><div class="card-h"><h2>Paste a list</h2></div><div class="card-b">' +
+      '<p class="note" style="margin-bottom:10px">One person per line, separated by commas or tabs, in this order: first name, surname, email, mobile, role, business. Role can be Pitcher or Judge; if it is blank we use Pitcher. Pasting straight from a spreadsheet works.</p>' +
+      '<label class="sr" for="bulk">List of people</label><textarea class="inp" id="bulk" style="min-height:170px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px" placeholder="Thandi, Molefe, thandi@ubuntuthreads.co.za, +27 82 000 0000, Pitcher, Ubuntu Threads"></textarea>' +
+      '<div class="btnrow" style="margin-top:12px"><button class="btn btn--line" id="chkBtn">Check the list</button><button class="btn btn--red" id="impBtn" hidden>Add</button></div>' +
+      '<div id="impOut"></div></div></div>' +
+  '</div>';
+  var read = bindPersonForm($('#addScope'));
+  $('#addBtn').addEventListener('click', function () {
+    var x = read(), bad = validPerson(x);
+    if (!bad && findP(x.email)) bad = 'That email is already on the list.';
+    if (bad) { $('#fErr').hidden = false; $('#fErr').textContent = bad; return; }
+    $('#fErr').hidden = true;
+    var b = $('#addBtn'); b.disabled = true; b.textContent = 'Adding…';
+    api('savePerson', { person:x }).then(function (res) {
+      b.disabled = false; b.textContent = 'Add to the line-up';
+      if (!res.ok) { $('#fErr').hidden = false; $('#fErr').textContent = errText(res); return; }
+      toast(x.first + ' added with password ' + res.password, 4500);
+      load().then(function () { show('add'); });
+    });
+  });
+  $('#bulk').addEventListener('input', function () { $('#impBtn').hidden = true; $('#impOut').innerHTML = ''; S.importRows = null; });
+  $('#chkBtn').addEventListener('click', checkBulk);
+  $('#impBtn').addEventListener('click', runImport);
+}
+function parseBulk(txt) {
+  var seen = {}, existing = {};
+  people().forEach(function (p) { existing[p.email] = 1; });
+  return txt.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean).map(function (line, i) {
+    var parts = (line.indexOf('\t') >= 0 ? line.split('\t') : line.split(',')).map(function (s) { return s.trim(); });
+    var r = { line:i + 1, first:parts[0] || '', surname:parts[1] || '', email:(parts[2] || '').toLowerCase(), phone:parts[3] || '', roleRaw:parts[4] || '', business:parts.slice(5).join(', ') };
+    var rr = r.roleRaw.toLowerCase();
+    r.role = rr.indexOf('judge') === 0 ? 'judge' : 'pitcher';
+    r.problem = '';
+    if (/^first/i.test(r.first) && /mail/i.test(parts[2] || '')) r.problem = 'Looks like a header row, so it will be skipped';
+    else if (!r.first) r.problem = 'No first name';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) r.problem = 'No valid email in the third column';
+    else if (existing[r.email]) r.problem = 'Already on the list';
+    else if (seen[r.email]) r.problem = 'Listed twice';
+    else if (rr && rr.indexOf('judge') !== 0 && rr.indexOf('pitch') !== 0) r.problem = 'Role "' + r.roleRaw + '" not recognised. Use Pitcher or Judge';
+    seen[r.email] = 1;
+    return r;
+  });
+}
+function checkBulk() {
+  var rows = parseBulk($('#bulk').value);
+  if (!rows.length) { $('#impOut').innerHTML = '<p class="note" style="margin-top:12px">Paste at least one line first.</p>'; return; }
+  S.importRows = rows;
+  var good = rows.filter(function (r) { return !r.problem; });
+  $('#impOut').innerHTML = '<p class="note" style="margin-top:14px"><b>' + good.length + '</b> ready to add' + (rows.length - good.length ? ', <b>' + (rows.length - good.length) + '</b> with problems (shaded, and they will be skipped)' : '') + '.</p>' +
+    '<div class="imp-wrap"><table class="imp-table"><thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Business</th></tr></thead><tbody>' +
+    rows.map(function (r) {
+      return '<tr class="' + (r.problem ? 'bad' : '') + '"><td>' + esc(r.first + ' ' + r.surname) + '</td><td>' + esc(r.email) + '</td><td style="white-space:nowrap">' + esc(r.phone) + '</td><td>' + (r.role === 'judge' ? 'Judge' : 'Pitcher') + '</td><td>' + esc(r.business) + '</td></tr>' +
+        (r.problem ? '<tr class="why"><td colspan="5">Line ' + r.line + ': ' + esc(r.problem) + '</td></tr>' : '');
+    }).join('') + '</tbody></table></div>';
+  var b = $('#impBtn'); b.hidden = !good.length; b.textContent = 'Add ' + good.length + (good.length === 1 ? ' person' : ' people');
+}
+function runImport() {
+  var good = (S.importRows || []).filter(function (r) { return !r.problem; });
+  if (!good.length) return;
+  var b = $('#impBtn'); b.disabled = true; b.textContent = 'Adding…';
+  api('importPeople', { rows:good.map(function (r) { return { first:r.first, surname:r.surname, email:r.email, phone:r.phone, role:r.role, business:r.business }; }) }).then(function (res) {
+    b.disabled = false;
+    if (!res.ok) { toast(errText(res), 5000); b.textContent = 'Try again'; return; }
+    S.importRows = null;
+    load().then(function () {
+      show('add');
+      $('#impOut').innerHTML = '<p class="note" style="margin-top:14px"><b>' + res.added + '</b> added.' + (res.skipped && res.skipped.length ? ' Skipped: ' + res.skipped.map(function (s) { return esc(s.email) + ' (' + esc(s.reason) + ')'; }).join(', ') + '.' : '') + ' Next, send their invitations from the Emails page.</p>' +
+        '<div class="btnrow" style="margin-top:10px"><button class="btn btn--gold" data-go="emails">Go to Emails</button></div>';
+      $$('[data-go]').forEach(function (x) { x.addEventListener('click', function () { show(x.dataset.go); }); });
+    });
+  });
+}
+
+/* ============================================================
+   EMAILS
+   ============================================================ */
+function audience(kind, who) {
+  return people().filter(function (p) {
+    if (who !== 'all' && p.role !== who) return false;
+    if (kind === 'invite') return p.state === 'new';
+    if (kind === 'reminder') return p.state === 'invited' || p.state === 'started';
+    return false;
+  });
+}
+function vEmails() {
+  var e = S.email;
+  var seg = function (name, opts, cur) { return '<div class="seg" role="group" aria-label="' + name + '">' + opts.map(function (o) { return '<button type="button" data-' + name + '="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; };
+  var inv = audience('invite', e.who), rem = audience('reminder', e.who);
+  var whoLabel = e.who === 'all' ? 'pitchers and judges' : e.who === 'judge' ? 'judges' : 'pitchers';
+  var bulk = isAdmin() ? (
+    '<div class="card"><div class="card-h"><h2>Send to a group</h2></div><div class="card-b stack">' +
+      '<div class="field"><span class="lbl">Who</span>' + seg('who', [['all','Everyone'],['pitcher','Pitchers'],['judge','Judges']], e.who) + '</div>' +
+      '<div class="bulk"><p><b>' + inv.length + '</b> ' + whoLabel + ' not invited yet.</p><button class="btn btn--red" id="bInv"' + (inv.length ? '' : ' disabled') + '>Invite everyone not yet invited</button></div>' +
+      '<div class="bulk"><p><b>' + rem.length + '</b> ' + whoLabel + ' invited but not finished.</p><button class="btn btn--line" id="bRem"' + (rem.length ? '' : ' disabled') + '>Remind everyone outstanding</button></div>' +
+      '<p class="note">Everyone gets the version for their role. Confirmations send automatically when someone locks in, and you can resend one from their row on the People page.</p>' +
+    '</div></div>') : '<div class="card"><div class="card-b"><p class="note">These are the emails the hub sends. Lee-Anne and Andrew send them from here.</p></div></div>';
+
+  $('#view').innerHTML = '<div class="em-grid"><div class="stack">' +
+      '<div class="card"><div class="card-h"><h2>Preview</h2></div><div class="card-b stack">' +
+        '<div class="field"><span class="lbl">Email</span>' + seg('kind', [['invite','Invitation'],['reminder','Reminder'],['confirmation','Confirmation']], e.kind) + '</div>' +
+        '<div class="field"><span class="lbl">Version</span>' + seg('erole', [['pitcher','Pitcher'],['judge','Judge']], e.role) + '</div>' +
+        (isAdmin() ? '<button class="btn btn--gold" id="testBtn">Send a test to me</button><p class="note">Goes to ' + esc(S.me.email) + ' with sample details, marked TEST.</p>' : '') +
+      '</div></div>' + bulk +
+    '</div>' +
+    '<div class="card"><div class="card-h"><p class="subj" id="emSubj" style="margin:0">Loading…</p></div><iframe class="em-frame" id="emFrame" title="Email preview" sandbox=""></iframe></div>' +
+  '</div>';
+
+  $$('[data-kind]').forEach(function (b) { b.addEventListener('click', function () { e.kind = b.dataset.kind; vEmails(); }); });
+  $$('[data-erole]').forEach(function (b) { b.addEventListener('click', function () { e.role = b.dataset.erole; vEmails(); }); });
+  $$('[data-who]').forEach(function (b) { b.addEventListener('click', function () { e.who = b.dataset.who; vEmails(); }); });
+  api('preview', { kind:e.kind, role:e.role }).then(function (r) {
+    if (!$('#emFrame')) return;
+    if (!r.ok) { $('#emSubj').textContent = errText(r); return; }
+    $('#emSubj').innerHTML = 'Subject: <b>' + esc(r.subject) + '</b>';
+    $('#emFrame').srcdoc = r.html;
+  });
+  if (!isAdmin()) return;
+  $('#testBtn').addEventListener('click', function () {
+    var b = $('#testBtn'); b.disabled = true; b.textContent = 'Sending…';
+    api('test', { kind:e.kind, role:e.role }).then(function (r) { b.disabled = false; b.textContent = 'Send a test to me'; toast(r.ok ? 'Test sent to ' + r.sentTo : errText(r), 4500); });
+  });
+  var bulkSend = function (kind, list) {
+    confirmDlg((kind === 'invite' ? 'Invite ' : 'Remind ') + list.length + (list.length === 1 ? ' person?' : ' people?'),
+      '<p>' + (kind === 'invite' ? 'Each person gets their invitation with their own hub password.' : 'Each person gets a reminder listing what they still need to add.') + ' It sends from Andrew\'s address and takes about a second per person.</p>' +
+      '<div class="namelist">' + list.map(function (p) { return '<div>' + esc(p.name) + ' <span class="muted small">' + (p.role === 'judge' ? 'Judge' : 'Pitcher') + '</span></div>'; }).join('') + '</div>',
+      kind === 'invite' ? 'Send ' + list.length + ' invitations' : 'Send ' + list.length + ' reminders',
+      function () {
+        toast('Sending ' + list.length + '…', 60000);
+        return api('send', { kind:kind, emails:list.map(function (p) { return p.email; }) }).then(function (res) {
+          if (!res.ok) { toast(errText(res), 5000); return; }
+          return load().then(function () {
+            show('emails');
+            var parts = ['<p><b>' + res.sent + '</b> sent.</p>'];
+            if (res.skipped && res.skipped.length) parts.push('<p>Skipped ' + res.skipped.length + ': ' + res.skipped.map(function (s) { return esc(s.email) + ' (' + esc(s.reason) + ')'; }).join(', ') + '.</p>');
+            if (res.failed && res.failed.length) parts.push('<p>Failed ' + res.failed.length + ': ' + res.failed.map(function (s) { return esc(s.email) + ' (' + esc(s.reason) + ')'; }).join(', ') + '.</p><p class="note">Check that helloyou@andrewwolhuter.com is still a "Send mail as" address in Gmail, then try again.</p>');
+            toast('Done', 1200);
+            infoDlg(kind === 'invite' ? 'Invitations sent' : 'Reminders sent', parts.join(''));
+          });
+        });
+      });
+  };
+  $('#bInv').addEventListener('click', function () { bulkSend('invite', inv); });
+  $('#bRem').addEventListener('click', function () { bulkSend('reminder', rem); });
+}
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
+function vMessages() {
+  var m = S.data.messages || [];
+  $('#view').innerHTML = '<div class="card"><div class="card-h"><h2>' + m.length + (m.length === 1 ? ' message' : ' messages') + '</h2><div class="right"><span class="small muted">Also emailed to Annie and Lee-Anne as they arrive</span></div></div>' +
+    (m.length ? m.map(function (x) {
+      return '<div class="msg"><div class="who"><b>' + esc(x.name || x.email) + '</b>' + (x.role ? '<span class="role' + (/judge/i.test(x.role) ? ' judge' : '') + '">' + esc(x.role) + '</span>' : '') + '<span class="muted">' + esc(x.at) + '</span>' +
+        '<a style="margin-left:auto" href="mailto:' + esc(x.email) + '?subject=' + encodeURIComponent('Re: your Pitchmasters Royale question') + '">Reply by email</a></div><p>' + esc(x.message) + '</p></div>';
+    }).join('') : '<div class="empty"><b>No messages yet</b>When a pitcher or judge uses "Ask the team" in the hub, it lands here.</div>') + '</div>';
+}
+
+/* ============================================================
+   DEMO MODE (?demo=1, add &as=viewer for the view-only login)
+   ============================================================ */
+var DEMO_DB = null;
+function demoSeed() {
+  var mk = function (o) {
+    var b = { code:'', role:'pitcher', first:'', surname:'', email:'', phone:'', business:'', title:'', tagline:'', synopsis:'', bio:'', lens:'', linkedin:'',
+      arrival:'', onStageNeeds:'', dietary:'', notes:'', coverUrl:'', folderUrl:'', state:'new', checks:{ photo:false, profile:false, logistics:false },
+      firstSeen:'', lastUpdated:'', lockedAt:'', inviteSent:'', lastReminded:'', confirmSent:'', password:'' };
+    var p = Object.assign(b, o); p.name = (p.first + ' ' + p.surname).trim(); return p;
+  };
+  var drive = 'https://drive.google.com/drive/folders/demo';
+  return {
+    people: [
+      mk({ code:'PM-01', first:'Thandi', surname:'Molefe', email:'thandi@ubuntuthreads.co.za', phone:'+27 82 555 0101', business:'Ubuntu Threads', tagline:'Heritage prints, made to last', synopsis:'Thandi turned her grandmother\'s fabric offcuts into a label that now ships to 9 countries. Ubuntu Threads makes heritage prints for people who want their clothes to carry a story.', arrival:'5:15 (early)', onStageNeeds:'Just me & a mic', dietary:'Vegetarian', state:'locked', checks:{ photo:true, profile:true, logistics:true }, coverUrl:'https://drive.google.com/file/d/demo', folderUrl:drive, inviteSent:'22 Oct 2026, 09:12', firstSeen:'22 Oct 2026, 10:03', lastUpdated:'23 Oct 2026, 18:44', lockedAt:'23 Oct 2026, 18:45', confirmSent:'23 Oct 2026, 18:45', password:'baccarat-41' }),
+      mk({ code:'PM-02', first:'Sipho', surname:'Dlamini', email:'sipho@brewboxsa.com', phone:'+27 72 555 0102', business:'BrewBox', tagline:'Coffee that comes to you', synopsis:'BrewBox delivers small-batch Cape Town coffee to offices every Monday, roasted on Friday.', arrival:'5:45', onStageNeeds:'Music cue', state:'complete', checks:{ photo:true, profile:true, logistics:true }, coverUrl:'https://drive.google.com/file/d/demo', folderUrl:drive, inviteSent:'22 Oct 2026, 09:12', firstSeen:'22 Oct 2026, 12:20', lastUpdated:'24 Oct 2026, 08:02', password:'martini-23' }),
+      mk({ code:'PM-03', first:'Megan', surname:'van der Merwe', email:'megan@fynbosfinance.co.za', phone:'+27 83 555 0103', business:'Fynbos Finance', synopsis:'', state:'started', checks:{ photo:true, profile:false, logistics:false }, coverUrl:'https://drive.google.com/file/d/demo', folderUrl:drive, inviteSent:'22 Oct 2026, 09:12', firstSeen:'23 Oct 2026, 07:51', lastUpdated:'23 Oct 2026, 07:55', password:'tuxedo-57' }),
+      mk({ code:'PM-04', first:'Ravi', surname:'Naidoo', email:'ravi@tablemountainlabs.com', phone:'+27 61 555 0104', business:'Table Mountain Labs', state:'invited', inviteSent:'22 Oct 2026, 09:12', lastReminded:'24 Oct 2026, 10:00', password:'jackpot-18' }),
+      mk({ code:'PM-05', first:'Lerato', surname:'Khumalo', email:'lerato@khumalocreative.co.za', phone:'+27 79 555 0105', business:'Khumalo Creative', state:'new', password:'velvet-62' }),
+      mk({ code:'PM-06', first:'Jonathan', surname:'Wild', email:'jon@wildadvisory.co.za', phone:'+27 83 555 0106', business:'Wild Advisory', state:'withdrawn', inviteSent:'22 Oct 2026, 09:12', password:'monaco-33' }),
+      mk({ code:'JG-01', role:'judge', first:'Nomsa', surname:'Petersen', email:'nomsa@capeangels.co.za', phone:'+27 82 555 0201', business:'Cape Angels', title:'Managing Partner', bio:'Nomsa has backed 30 early-stage businesses across the Western Cape and still reads every pitch deck herself.', lens:'Business', linkedin:'linkedin.com/in/nomsapetersen', arrival:'5:45', state:'locked', checks:{ photo:true, profile:true, logistics:true }, coverUrl:'https://drive.google.com/file/d/demo', folderUrl:drive, inviteSent:'22 Oct 2026, 09:30', firstSeen:'22 Oct 2026, 15:10', lastUpdated:'22 Oct 2026, 15:31', lockedAt:'22 Oct 2026, 15:32', confirmSent:'22 Oct 2026, 15:32', password:'diamond-71' }),
+      mk({ code:'JG-02', role:'judge', first:'David', surname:'Mokoena', email:'david@stagecraft.co.za', phone:'+27 71 555 0202', business:'Stagecraft Coaching', title:'Speaker Coach', lens:'Public Speaking', state:'invited', inviteSent:'22 Oct 2026, 09:30', password:'roulette-25' }),
+      mk({ code:'JG-03', role:'judge', first:'Claire', surname:'Botha', email:'claire@botha.media', business:'Botha Media', title:'Editor', state:'new', password:'premiere-48' })
+    ],
+    messages: [
+      { at:'24 Oct 2026, 08:14', name:'Megan van der Merwe', role:'Pitcher', email:'megan@fynbosfinance.co.za', message:'Can I bring a prop on stage? It is a small jar of fynbos honey.' },
+      { at:'23 Oct 2026, 19:40', name:'', role:'Not signed in', email:'kabelo@example.co.za', message:'I booked a pitcher ticket on Quicket but never got a hub password. Please can you add me?' }
+    ]
+  };
+}
+function demoApi(op, b) {
+  if (!DEMO_DB) DEMO_DB = demoSeed();
+  var viewer = QS.get('as') === 'viewer';
+  var me = viewer ? { name:'Annie Olufuwa', email:'annie@getstoryd.com', role:'viewer' } : { name:'Lee-Anne Webster', email:'lee-anne@getstoryd.com', role:'admin' };
+  var ev = { name:'Pitchmasters Royale', dateLong:'Friday 30 October 2026' };
+  var find = function (e) { return DEMO_DB.people.filter(function (p) { return p.email === e; })[0]; };
+  var r;
+  if (['savePerson','importPeople','withdraw','resetPassword','send','test','sendAccess'].indexOf(op) >= 0 && viewer) r = { ok:false, error:'forbidden' };
+  else if (op === 'login') r = { ok:true, admin:me, event:ev };
+  else if (op === 'list') {
+    var ppl = DEMO_DB.people.map(function (p) { var x = Object.assign({}, p); if (viewer) delete x.password; return x; });
+    r = { ok:true, people:ppl, messages:DEMO_DB.messages, event:ev, me:me };
+    if (!viewer) { r.quota = 1487; r.sheetUrl = 'https://docs.google.com/spreadsheets/d/demo'; r.folderUrl = 'https://drive.google.com/drive/folders/demo'; }
+  }
+  else if (op === 'thumb') {
+    var p0 = find(b.email), hue = p0 && p0.role === 'judge' ? '#E6B537' : '#A5554E';
+    r = { ok:true, thumb:'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" fill="#3A2023"/><circle cx="48" cy="38" r="18" fill="' + hue + '"/><rect x="18" y="62" width="60" height="40" rx="30" fill="' + hue + '"/></svg>') };
+  }
+  else if (op === 'savePerson') {
+    var x = b.person, cur = find(x.originalEmail || x.email);
+    if (!cur) { cur = Object.assign(demoSeed().people[4], { state:'new', inviteSent:'', code:(x.role === 'judge' ? 'JG-' : 'PM-') + ('0' + (DEMO_DB.people.length + 1)).slice(-2), password:'encore-' + (10 + DEMO_DB.people.length) }); DEMO_DB.people.push(cur); }
+    Object.assign(cur, { first:x.first, surname:x.surname, email:x.email, phone:x.phone, role:x.role, business:x.business, title:x.title }); cur.name = (x.first + ' ' + x.surname).trim();
+    r = { ok:true, code:cur.code, password:cur.password };
+  }
+  else if (op === 'importPeople') { b.rows.forEach(function (x) { demoApi('savePerson', { person:x }); }); r = { ok:true, added:b.rows.length, skipped:[] }; }
+  else if (op === 'withdraw') { var w = find(b.email); w.state = b.withdrawn ? 'withdrawn' : (w.inviteSent ? 'invited' : 'new'); r = { ok:true, state:w.state }; }
+  else if (op === 'resetPassword') { var rp = find(b.email); rp.password = 'ovation-' + (10 + Math.floor(Math.random() * 89)); r = { ok:true, password:rp.password }; }
+  else if (op === 'send') {
+    var sent = 0, skipped = [];
+    b.emails.forEach(function (e) { var p = find(e); if (!p) return; if (b.kind === 'reminder' && (p.state === 'complete' || p.state === 'locked')) { skipped.push({ email:e, reason:'already done' }); return; } sent++; if (b.kind === 'invite') { p.inviteSent = '25 Oct 2026, 09:00'; if (p.state === 'new') p.state = 'invited'; } });
+    r = { ok:true, sent:sent, skipped:skipped, failed:[] };
+  }
+  else if (op === 'test') r = { ok:true, sentTo:me.email };
+  else if (op === 'sendAccess') r = { ok:true, sentTo:b.email };
+  else if (op === 'preview') {
+    var subj = { invite:'Your licence to pitch, Thandi', reminder:'Quick nudge, Thandi: your Royale details', confirmation:'Licence to pitch confirmed, Thandi' }[b.kind];
+    if (b.role === 'judge') subj = { invite:'Nomsa, you are on the Royale judging panel', reminder:'Quick nudge, Nomsa: your judge profile', confirmation:'Locked in, Nomsa. See you on the panel' }[b.kind];
+    r = { ok:true, subject:subj, html:'<!doctype html><body style="margin:0;background:#4A2A2C;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px"><table width="600" style="max-width:600px;background:#FBF6EE"><tr><td style="background:#663C3D;color:#F7EFE3;padding:34px;text-align:center;font-family:Georgia,serif;font-size:30px;letter-spacing:3px">PITCHMASTERS<br><span style="font-size:42px">ROYALE</span></td></tr><tr><td style="padding:30px 34px;color:#2E1A1B;font-size:15px;line-height:24px"><p style="margin:0 0 12px;font-weight:bold">Demo preview: ' + esc(KIND_LABEL[b.kind]) + ' for a ' + (b.role === 'judge' ? 'judge' : 'pitcher') + '.</p>The live console shows the real email here, built by the backend.</td></tr></table></td></tr></table></body>' };
+  }
+  else r = { ok:false, error:'unknown_op' };
+  return new Promise(function (res) { setTimeout(function () { res(JSON.parse(JSON.stringify(r))); }, 120); });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(function boot() {
+  if (DEMO) { S.auth = { email:'demo', password:'demo' }; api('login').then(start); return; }
+  var saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(CONFIG.sessionKey) || 'null'); } catch (e) {}
+  if (!saved) { showGate(); return; }
+  S.auth = saved;
+  api('login').then(function (res) {
+    if (res.ok) start(res);
+    else { S.auth = null; showGate(res.error === 'auth' ? '' : "Couldn't reach the backend just now. Check your connection and try again in a minute."); }
+  });
+})();
+</script>
+</body>
+</html>
