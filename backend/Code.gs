@@ -110,7 +110,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return json_({ ok:true, service:'pitchmasters-hub', version:'2-royale', event:EVENT.name, time:new Date().toISOString() });
+  return json_({ ok:true, service:'pitchmasters-hub', version:'3-royale-20nov', event:EVENT.name, time:new Date().toISOString() });
 }
 
 /* ============================================================
