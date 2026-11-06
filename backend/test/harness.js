@@ -27,7 +27,7 @@ const row = (email) => { const v = people.getDataRange().getValues(); const h = 
 
 /* ---------- health ---------- */
 const health = JSON.parse(G.doGet({}).getContent());
-check('doGet health', health.ok && health.version === '2-royale', health);
+check('doGet health', health.ok && health.version === '3-royale-20nov', health);
 
 /* ---------- admin auth ---------- */
 let r = admin('login');
