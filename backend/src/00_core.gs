@@ -27,6 +27,7 @@ var CFG = {
   PEOPLE_TAB:        'Royale Oct 2026',      // this event's pitchers + judges
   ADMINS_TAB:        'Admins',               // console logins
   MESSAGES_TAB:      'Messages',             // "Ask the team" messages
+  SETTINGS_TAB:      'Settings',             // optional overrides: sender_email, sender_name, reply_to
   PARENT_FOLDER_ID:  '1qeNXlhBUq-YSKZwsvLcBrkU2ZybrebaA', // Drive: Pitcher Uploads
   EVENT_FOLDER_NAME: 'Royale Oct 2026',      // subfolder created under Pitcher Uploads
   MAKE_COVER_LINK_VIEWABLE: false,           // false = photos stay private to the Drive owner
@@ -39,15 +40,15 @@ var CFG = {
 var EVENT = {
   name:          'Pitchmasters Royale',
   theme:         'Casino Royale',
-  dateLong:      'Friday 30 October 2026',
-  dateShort:     '30 October',
+  dateLong:      'Friday 20 November 2026',
+  dateShort:     '20 November',
   time:          '6pm to 8:30pm',
   doors:         '6pm',
   venue:         'BMW Cape Town City',
   venueAddress:  'Harbour Arch, Foreshore, Cape Town',
   host:          'BMW Cape Town City',
-  deadlineLong:  'Wednesday 28 October',
-  deadlineShort: '28 October',
+  deadlineLong:  'Wednesday 18 November',
+  deadlineShort: '18 November',
   pitchMinutes:  3,
   earlyTime:     '5:15',
   dressCode:     'Dress to impress: bow ties, posh frocks, slick jackets and a touch of 007 glamour.',
@@ -91,6 +92,7 @@ var FIELD_MAP = { onStageNeeds:'on_stage_needs', company:'business' };
 
 /* ---------------- HTTP entry points ---------------- */
 function doPost(e) {
+  settings_.cache = null; // read the Settings tab fresh on every request
   try {
     var body = {};
     if (e && e.postData && e.postData.contents) body = JSON.parse(e.postData.contents);
@@ -210,9 +212,7 @@ function ask_(body) {
     var subject = 'Pitch Hub question from ' + (name || email) + (role ? ' (' + role + ')' : '');
     var text = (name || email) + (role ? ', ' + role : '') + ' asked:\n\n' + message +
                '\n\nReply to this email to answer them directly.\n\nSent from the Pitchmasters Pitch Hub.';
-    GmailApp.sendEmail(MAIL.NOTIFY.join(','), subject, text, {
-      from: MAIL.SENDER, name: 'Pitchmasters Pitch Hub', replyTo: email
-    });
+    sendMail_(MAIL.NOTIFY.join(','), subject, text, { name: 'Pitchmasters Pitch Hub', replyTo: email });
   } catch (e) { /* message is stored even if the notification fails */ }
   return { ok:true };
 }
@@ -329,6 +329,49 @@ function eventFolder_() {
     try { folder.addViewer(email); } catch (e) { /* sharing is best-effort */ }
   });
   return folder;
+}
+
+/* ============================================================
+   SENDER · who the emails come from
+   Defaults to MAIL above. The optional "Settings" tab overrides it,
+   one key per row in column A, value in column B:
+     sender_email  e.g. lee-anne@getstoryd.com  (must be a "Send mail as"
+                   address on the Gmail account that owns this script)
+     sender_name   e.g. Lee-Anne Webster
+     reply_to      where replies go (blank = the sender)
+   If the override address cannot be used, the email still goes out
+   from the default sender, so nothing silently stops sending.
+   ============================================================ */
+function settings_() {
+  if (settings_.cache) return settings_.cache;
+  var out = {};
+  try {
+    var sh = ss_().getSheetByName(CFG.SETTINGS_TAB);
+    if (sh) sh.getDataRange().getValues().slice(1).forEach(function (r) {
+      var k = String(r[0] || '').trim().toLowerCase();
+      if (k) out[k] = String(r[1] == null ? '' : r[1]).trim();
+    });
+  } catch (e) {}
+  settings_.cache = out;
+  return out;
+}
+function sender_() {
+  var s = settings_();
+  var email = normEmail_(s.sender_email) || MAIL.SENDER;
+  var name = s.sender_name || (email === MAIL.SENDER ? MAIL.SENDER_NAME : 'Pitchmasters');
+  return { email: email, name: name, replyTo: normEmail_(s.reply_to) || email };
+}
+function sendMail_(to, subject, text, opts) {
+  opts = opts || {};
+  var snd = sender_();
+  var base = { name: opts.name || snd.name, replyTo: opts.replyTo || snd.replyTo };
+  if (opts.htmlBody) base.htmlBody = opts.htmlBody;
+  try {
+    GmailApp.sendEmail(to, subject, text, Object.assign({}, base, { from: snd.email }));
+  } catch (e) {
+    if (snd.email === MAIL.SENDER) throw e;
+    GmailApp.sendEmail(to, subject, text, Object.assign({}, base, { from: MAIL.SENDER, name: MAIL.SENDER_NAME }));
+  }
 }
 
 /* ============================================================

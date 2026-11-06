@@ -275,7 +275,7 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.5}
   <div class="gate-in">
     <h1 class="gate-mark">PITCHMASTERS<span>ROYALE</span></h1>
     <img class="gate-flourish" src="../assets/royale/flourish.svg" alt="">
-    <p class="gate-sub">The console for the 30 October line-up: pitchers, judges and their emails.</p>
+    <p class="gate-sub">The console for the 20 November line-up: pitchers, judges and their emails.</p>
     <form class="gate-card" id="gateForm" autocomplete="on">
       <div class="field">
         <label for="gEmail">Your email</label>
@@ -318,7 +318,7 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.5}
       <h1 id="viewTitle">Overview</h1>
       <div class="right">
         <span class="demo-flag" id="demoFlag" hidden>Demo data</span>
-        <span class="evpill" id="evPill">Friday 30 October 2026</span>
+        <span class="evpill" id="evPill">Friday 20 November 2026</span>
         <button class="btn btn--line btn--sm" type="button" id="refresh">Refresh</button>
       </div>
     </div>
@@ -338,8 +338,8 @@ textarea.inp{resize:vertical;min-height:120px;line-height:1.5}
 var CONFIG = {
   apiUrl: 'https://script.google.com/macros/s/AKfycbxSil_S689c6GYL5l6S63klkYuy5NwnFlc_ZXYmc9IOPuUMQ9twQrZreZrw4d6Y7bNW/exec',
   hubUrl: 'https://pitchershub.vercel.app/',
-  deadline: '2026-10-28T23:59:00+02:00',
-  deadlineLabel: 'Wednesday 28 October',
+  deadline: '2026-11-18T23:59:00+02:00',
+  deadlineLabel: 'Wednesday 18 November',
   openedLabel: 'Wednesday 21 October',
   opened: '2026-10-21T00:00:00+02:00',
   sessionKey: 'pm_console_v2',
@@ -371,6 +371,7 @@ var $  = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function isAdmin() { return S.me && S.me.role === 'admin'; }
+function senderLabel() { var d = S.data && S.data.sender; return d && d.email ? d.name + ' (' + d.email + ')' : 'Andrew\'s address'; }
 function people() { return (S.data && S.data.people) || []; }
 function initials(n) { return String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || '?'; }
 function chip(state) { return '<span class="chip st-' + esc(state) + '">' + esc(STATE_LABEL[state] || state) + '</span>'; }
@@ -707,7 +708,7 @@ function openDrawer(email) {
   $('#dCopy').addEventListener('click', function (e) { copyText('Pitch Hub: ' + CONFIG.hubUrl + '\nEmail: ' + p.email + '\nPassword: ' + p.password + '\nSign in as: ' + (judge ? 'Judge' : 'Pitcher'), e.target); });
   $$('[data-send]').forEach(function (b) { b.addEventListener('click', function () {
     var k = b.dataset.send;
-    confirmDlg('Send the ' + KIND_LABEL[k].toLowerCase() + '?', '<p>This emails <b>' + esc(p.name) + '</b> at ' + esc(p.email) + ' from Andrew\'s address.</p>', 'Send ' + KIND_LABEL[k].toLowerCase(), function () {
+    confirmDlg('Send the ' + KIND_LABEL[k].toLowerCase() + '?', '<p>This emails <b>' + esc(p.name) + '</b> at ' + esc(p.email) + ' from ' + esc(senderLabel()) + '.</p>', 'Send ' + KIND_LABEL[k].toLowerCase(), function () {
       return api('send', { kind:k, emails:[p.email] }).then(function (res) { return afterSend(res, k, p.email); });
     });
   }); });
@@ -966,7 +967,7 @@ function vEmails() {
   });
   var bulkSend = function (kind, list) {
     confirmDlg((kind === 'invite' ? 'Invite ' : 'Remind ') + list.length + (list.length === 1 ? ' person?' : ' people?'),
-      '<p>' + (kind === 'invite' ? 'Each person gets their invitation with their own hub password.' : 'Each person gets a reminder listing what they still need to add.') + ' It sends from Andrew\'s address and takes about a second per person.</p>' +
+      '<p>' + (kind === 'invite' ? 'Each person gets their invitation with their own hub password.' : 'Each person gets a reminder listing what they still need to add.') + ' It sends from ' + esc(senderLabel()) + ' and takes about a second per person.</p>' +
       '<div class="namelist">' + list.map(function (p) { return '<div>' + esc(p.name) + ' <span class="muted small">' + (p.role === 'judge' ? 'Judge' : 'Pitcher') + '</span></div>'; }).join('') + '</div>',
       kind === 'invite' ? 'Send ' + list.length + ' invitations' : 'Send ' + list.length + ' reminders',
       function () {
@@ -1034,7 +1035,7 @@ function demoApi(op, b) {
   if (!DEMO_DB) DEMO_DB = demoSeed();
   var viewer = QS.get('as') === 'viewer';
   var me = viewer ? { name:'Annie Olufuwa', email:'annie@getstoryd.com', role:'viewer' } : { name:'Lee-Anne Webster', email:'lee-anne@getstoryd.com', role:'admin' };
-  var ev = { name:'Pitchmasters Royale', dateLong:'Friday 30 October 2026' };
+  var ev = { name:'Pitchmasters Royale', dateLong:'Friday 20 November 2026' };
   var find = function (e) { return DEMO_DB.people.filter(function (p) { return p.email === e; })[0]; };
   var r;
   if (['savePerson','importPeople','withdraw','resetPassword','send','test','sendAccess'].indexOf(op) >= 0 && viewer) r = { ok:false, error:'forbidden' };

@@ -67,7 +67,8 @@ function adminList_(me) {
     }
   } catch (e) {}
 
-  var out = { ok:true, people:people, messages:msgs, event:EVENT, me:{ name:me.name, role:me.role } };
+  var snd = sender_();
+  var out = { ok:true, people:people, messages:msgs, event:EVENT, me:{ name:me.name, role:me.role }, sender:{ email:snd.email, name:snd.name } };
   if (me.role === 'admin') {
     out.sheetUrl = ss_().getUrl();
     try { out.folderUrl = eventFolder_().getUrl(); } catch (e) {}
@@ -164,7 +165,7 @@ function adminSend_(kind, emails) {
 function adminTest_(me, kind, role) {
   try {
     var m = emailFor_(kind, samplePerson_(me, role));
-    GmailApp.sendEmail(me.email, m.subject + ' (TEST)', m.text, { from:MAIL.SENDER, name:MAIL.SENDER_NAME, replyTo:MAIL.SENDER, htmlBody:m.html });
+    sendMail_(me.email, m.subject + ' (TEST)', m.text, { htmlBody:m.html });
     return { ok:true, sentTo:me.email };
   } catch (e) { return { ok:false, error:'send_failed', detail:String(e.message || e) }; }
 }
@@ -187,7 +188,7 @@ function adminSendAccess_(me, email) {
     var name = String(v[r][idx.name] || '').split(' ')[0] || 'there';
     var role = String(v[r][idx.role]).toLowerCase() === 'admin' ? 'admin' : 'viewer';
     var m = accessEmail_({ first:name, email:email, password:String(v[r][idx.password]), role:role, from:me.name });
-    GmailApp.sendEmail(email, m.subject, m.text, { from:MAIL.SENDER, name:MAIL.SENDER_NAME, replyTo:MAIL.SENDER, htmlBody:m.html });
+    sendMail_(email, m.subject, m.text, { htmlBody:m.html });
     return { ok:true, sentTo:email };
   }
   return { ok:false, error:'not_found' };
@@ -200,9 +201,7 @@ var STAMP = { invite:'invite_sent', reminder:'last_reminded', confirmation:'conf
 
 function sendKind_(kind, ctx) {
   var m = emailFor_(kind, personForEmail_(ctx));
-  GmailApp.sendEmail(String(ctx.get('email')).trim(), m.subject, m.text, {
-    from: MAIL.SENDER, name: MAIL.SENDER_NAME, replyTo: MAIL.SENDER, htmlBody: m.html
-  });
+  sendMail_(String(ctx.get('email')).trim(), m.subject, m.text, { htmlBody: m.html });
   ctx.set(STAMP[kind], new Date());
   ctx.set('status', stateOf_(ctx));
 }

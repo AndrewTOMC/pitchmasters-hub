@@ -153,7 +153,7 @@ check('signin returns coverThumb data URL when photo on file', r.ok && /^data:im
 before = sentCount();
 r = post(Object.assign({ action: 'submit', notes: 'Locked' }, TH));
 check('submit locks + emails confirmation', r.ok && r.emailed === true && row('thandi@ubuntu.co.za').status === 'locked' && sentCount() === before + 1, r);
-check('confirmation subject', lastSent().subject === 'Locked in, Thandi. See you on the 30th', lastSent().subject);
+check('confirmation subject', lastSent().subject === 'Locked in, Thandi. See you on the 20th', lastSent().subject);
 check('confirmation shows all in', /Still to add/.test(lastSent().opts.htmlBody) === false, '');
 r = post(Object.assign({ action: 'submit' }, TH));
 check('second submit does not re-send confirmation', r.ok && r.emailed === false && sentCount() === before + 1, r);
@@ -222,6 +222,22 @@ r = admin('nope');
 check('unknown op', !r.ok && r.error === 'unknown_op', r);
 r = post({ action: 'nope' });
 check('unknown action', !r.ok && r.error === 'unknown_action', r);
+
+/* ---------- sender override via Settings tab ---------- */
+r = admin('test', { kind: 'invite', role: 'pitcher' });
+check('default sender is helloyou alias', lastSent().opts.from === 'helloyou@andrewwolhuter.com' && lastSent().opts.name === 'Andrew Wolhuter', lastSent().opts);
+const settings = ss.insertSheet(G.CFG.SETTINGS_TAB);
+settings.appendRow(['key', 'value']); settings.appendRow(['sender_email', 'Lee-Anne@getstoryd.com']); settings.appendRow(['sender_name', 'Lee-Anne Webster']);
+r = admin('test', { kind: 'invite', role: 'pitcher' });
+check('Settings tab switches the sender', lastSent().opts.from === 'lee-anne@getstoryd.com' && lastSent().opts.name === 'Lee-Anne Webster' && lastSent().opts.replyTo === 'lee-anne@getstoryd.com', lastSent().opts);
+r = admin('list');
+check('console is told who emails come from', r.sender && r.sender.email === 'lee-anne@getstoryd.com', r.sender);
+const realSend = M.GmailApp.sendEmail;
+M.GmailApp.sendEmail = (to, subject, body, opts) => { if (opts && opts.from === 'lee-anne@getstoryd.com') throw new Error('Invalid argument: from'); return realSend(to, subject, body, opts); };
+r = admin('test', { kind: 'invite', role: 'pitcher' });
+check('unusable alias falls back to the default sender', r.ok && lastSent().opts.from === 'helloyou@andrewwolhuter.com', lastSent().opts);
+M.GmailApp.sendEmail = realSend;
+settings.clear ? settings.clear() : null;
 
 /* ---------- July archive untouched ---------- */
 check('July tab untouched', july.getDataRange().getValues().length === 2 && july._get(2, 2) === 'old@example.com', july.data);
